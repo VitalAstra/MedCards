@@ -3,45 +3,25 @@ package com.example.medcards
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import com.example.medcards.data.model.Flashcard
+import com.example.medcards.ui.screens.FlashcardScreen
 import com.example.medcards.ui.theme.MedCardsTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
         setContent {
             MedCardsTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
-                }
+                val sampleCard = Flashcard(
+                    id = "1",
+                    subject = "Anatomía",
+                    question = "¿Cuál es el hueso más largo del cuerpo humano?",
+                    answer = "El Fémur"
+                )
+                FlashcardScreen(card = sampleCard, onAnswered = { rating ->
+                    // Aquí procesaremos la lógica de repetición espaciada
+                })
             }
         }
-    }
-}
-
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    MedCardsTheme {
-        Greeting("Android")
     }
 }
