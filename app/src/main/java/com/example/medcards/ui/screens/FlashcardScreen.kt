@@ -11,11 +11,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.medcards.data.model.Flashcard
+import com.example.medcards.domain.Rating
 import com.example.medcards.ui.theme.*
 
 @Composable
-fun FlashcardScreen(card: Flashcard, onAnswered: (String) -> Unit) {
-    var isRevealed by remember { mutableStateOf(false) }
+fun FlashcardScreen(card: Flashcard, onRated: (Rating) -> Unit) {
+    var isRevealed by remember(card.id) { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
@@ -56,17 +57,17 @@ fun FlashcardScreen(card: Flashcard, onAnswered: (String) -> Unit) {
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
                 Button(
-                    onClick = { onAnswered("HARD") },
+                    onClick = { onRated(Rating.HARD) },
                     colors = ButtonDefaults.buttonColors(containerColor = ErrorRed)
                 ) { Text("Difícil") }
 
                 Button(
-                    onClick = { onAnswered("GOOD") },
+                    onClick = { onRated(Rating.GOOD) },
                     colors = ButtonDefaults.buttonColors(containerColor = WarningAmber)
                 ) { Text("Bien") }
 
                 Button(
-                    onClick = { onAnswered("EASY") },
+                    onClick = { onRated(Rating.EASY) },
                     colors = ButtonDefaults.buttonColors(containerColor = MintGreen)
                 ) { Text("Fácil") }
             }
