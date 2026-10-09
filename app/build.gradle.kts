@@ -5,11 +5,7 @@ plugins {
 
 android {
     namespace = "com.example.medcards"
-    compileSdk {
-        version = release(37) {
-            minorApiLevel = 1
-        }
-    }
+    compileSdk = 37 // <-- Cambiado de bloque experimental a versión entera estándar
 
     defaultConfig {
         applicationId = "com.example.medcards"
