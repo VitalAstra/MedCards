@@ -34,6 +34,64 @@ interface FlashcardRepository {
     fun updateCardProgress(card: Flashcard, rating: Rating)
 }
 
+class MockFlashcardRepositoryImpl : FlashcardRepository {
+    private val flashcards = mutableListOf(
+        Flashcard(
+            "anatomy-1",
+            "Anatomía",
+            "¿Cuál es el hueso más largo del cuerpo humano?",
+            "El fémur"
+        ),
+        Flashcard(
+            "pharmacology-1",
+            "Farmacología",
+            "¿A qué grupo pertenece el ibuprofeno?",
+            "Antiinflamatorios no esteroideos (AINE)"
+        ),
+        Flashcard(
+            "histology-1",
+            "Histología",
+            "¿Qué célula produce anticuerpos?",
+            "El plasmocito"
+        )
+    )
+    private val reviewDates = mutableListOf<LocalDate>()
+
+    override fun getAllFlashcards(): List<Flashcard> = flashcards.toList()
+
+    override fun getFlashcardsBySubject(subject: String): List<Flashcard> =
+        flashcards.filter { it.subject == subject }
+
+    override fun getSubjectStats(): List<SubjectStats> = flashcards
+        .groupBy { it.subject }
+        .map { (subject, cards) ->
+            SubjectStats(
+                subject = subject,
+                total = cards.size,
+                reviewed = cards.count { it.repetitions > 0 }
+            )
+        }
+
+    override fun getReviewStats(): ReviewStats {
+        val today = LocalDate.now()
+        val reviewedDays = reviewDates.toSet()
+
+        return ReviewStats(
+            reviewedToday = reviewDates.count { it == today },
+            totalReviews = reviewDates.size,
+            masteredCards = flashcards.count { it.repetitions >= 3 },
+            streakDays = calculateCurrentStreakDays(reviewedDays, today)
+        )
+    }
+
+    override fun updateCardProgress(card: Flashcard, rating: Rating) {
+        val index = flashcards.indexOfFirst { it.id == card.id }
+        require(index >= 0) { "No se encontró la tarjeta '${card.id}'." }
+        flashcards[index] = card
+        reviewDates += LocalDate.now()
+    }
+}
+
 class SQLiteFlashcardRepository(context: Context) : FlashcardRepository {
     private val database = FlashcardDatabase(context.applicationContext)
 
@@ -103,13 +161,16 @@ class SQLiteFlashcardRepository(context: Context) : FlashcardRepository {
         ).use { cursor ->
             if (cursor.moveToFirst()) cursor.getInt(0) else 0
         }
-        val streakDays = database.rawQuery(
-            "SELECT COUNT(DISTINCT date(reviewed_at / 1000, 'unixepoch', 'localtime')) " +
-                "FROM review_history WHERE reviewed_at >= ?",
-            arrayOf((startOfToday - STREAK_WINDOW_MILLIS).toString())
+        val reviewedDates = database.rawQuery(
+            "SELECT DISTINCT date(reviewed_at / 1000, 'unixepoch', 'localtime') " +
+                "FROM review_history ORDER BY 1 DESC",
+            null
         ).use { cursor ->
-            if (cursor.moveToFirst()) cursor.getInt(0) else 0
+            buildSet {
+                while (cursor.moveToNext()) add(LocalDate.parse(cursor.getString(0)))
+            }
         }
+        val streakDays = calculateCurrentStreakDays(reviewedDates, LocalDate.now())
         return ReviewStats(reviewedToday, totalReviews, masteredCards, streakDays)
     }
 
@@ -182,7 +243,6 @@ class SQLiteFlashcardRepository(context: Context) : FlashcardRepository {
     private companion object {
         const val DATABASE_NAME = "medcards.db"
         const val DATABASE_VERSION = 1
-        const val STREAK_WINDOW_MILLIS = 365L * 24 * 60 * 60 * 1000
         val CARD_COLUMNS = arrayOf(
             "id", "subject", "question", "answer", "repetitions", "interval_days", "ease_factor"
         )
@@ -219,5 +279,20 @@ private fun android.database.Cursor.toFlashcard() = Flashcard(
     intervalDays = getInt(5),
     easeFactor = getDouble(6)
 )
+
+internal fun calculateCurrentStreakDays(
+    reviewedDates: Set<LocalDate>,
+    today: LocalDate
+): Int {
+    var streakDate = when {
+        today in reviewedDates -> today
+        today.minusDays(1) in reviewedDates -> today.minusDays(1)
+        else -> return 0
     }
+    var streakDays = 0
+    while (streakDate in reviewedDates) {
+        streakDays++
+        streakDate = streakDate.minusDays(1)
+    }
+    return streakDays
 }

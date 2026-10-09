@@ -50,6 +50,15 @@ class SpacedRepetitionCalculatorTest {
         assertEquals(1.3, result.easeFactor, 0.0)
     }
 
+    @Test
+    fun masteredRatingUsesSevenDayMinimum() {
+        val result = calculator.calculateNextReview(newCard(), Rating.MASTERED)
+
+        assertEquals(1, result.repetitions)
+        assertEquals(7, result.intervalDays)
+        assertEquals(2.6, result.easeFactor, 0.0001)
+    }
+
     private fun newCard() = Flashcard(
         id = "card-1",
         subject = "Anatomía",

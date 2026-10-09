@@ -26,7 +26,8 @@ fun DeckCard(
     subject: String,
     reviewedCount: Int,
     totalCount: Int,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val progress = if (totalCount > 0) {
         (reviewedCount.toFloat() / totalCount).coerceIn(0f, 1f)
@@ -35,7 +36,7 @@ fun DeckCard(
     }
 
     Card(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(16.dp),

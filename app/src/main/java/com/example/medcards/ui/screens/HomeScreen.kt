@@ -23,6 +23,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.medcards.data.repository.ReviewStats
+import com.example.medcards.data.repository.SubjectStats
 import com.example.medcards.ui.components.DeckCard
 import com.example.medcards.ui.theme.CardWhite
 import com.example.medcards.ui.theme.CobaltBlue
@@ -32,68 +34,64 @@ import com.example.medcards.ui.theme.TextDark
 import com.example.medcards.ui.theme.TextMuted
 import com.example.medcards.ui.theme.WarningAmber
 
-private data class DeckSummary(
-    val subject: String,
-    val reviewedCount: Int,
-    val totalCount: Int
-)
-
-private val deckSummaries = listOf(
-    DeckSummary(subject = "Anatomía", reviewedCount = 12, totalCount = 40),
-    DeckSummary(subject = "Farmacología", reviewedCount = 8, totalCount = 32),
-    DeckSummary(subject = "Histología", reviewedCount = 5, totalCount = 24)
-)
-
 @Composable
 fun HomeScreen(
+    subjectStats: List<SubjectStats>,
+    reviewStats: ReviewStats,
     onStartReviewClick: () -> Unit,
     onDeckClick: (subject: String) -> Unit
 ) {
     LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(LightColdGrey),
-        verticalArrangement = Arrangement.spacedBy(20.dp)
+        modifier = Modifier.fillMaxSize().background(LightColdGrey),
+        verticalArrangement = Arrangement.spacedBy(18.dp)
     ) {
+        item { HomeHeader(streakDays = reviewStats.streakDays) }
         item {
-            HomeHeader()
-        }
-
-        item {
-            DailyGoalCard(
+            TodayCard(
+                reviewStats = reviewStats,
                 modifier = Modifier.padding(horizontal = 20.dp),
                 onStartReviewClick = onStartReviewClick
             )
         }
-
         item {
             Text(
-                text = "Mis Mazos",
+                text = "Mis mazos",
                 modifier = Modifier.padding(horizontal = 20.dp),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
                 color = TextDark
             )
         }
-
-        items(deckSummaries, key = { it.subject }) { deck ->
-            DeckCard(
-                subject = deck.subject,
-                reviewedCount = deck.reviewedCount,
-                totalCount = deck.totalCount,
-                onClick = { onDeckClick(deck.subject) }
-            )
+        if (subjectStats.isEmpty()) {
+            item {
+                Text(
+                    text = "Aún no hay mazos disponibles.",
+                    modifier = Modifier.padding(horizontal = 20.dp),
+                    color = TextMuted
+                )
+            }
+        } else {
+            items(subjectStats, key = { it.subject }) { deck ->
+                DeckCard(
+                    subject = deck.subject,
+                    reviewedCount = deck.reviewed,
+                    totalCount = deck.total,
+                    onClick = { onDeckClick(deck.subject) },
+                    modifier = Modifier.padding(horizontal = 20.dp)
+                )
+            }
         }
+        item { Spacer(Modifier.height(8.dp)) }
     }
 }
 
 @Composable
-private fun HomeHeader() {
+private fun HomeHeader(streakDays: Int) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .background(CobaltBlue)
-            .padding(horizontal = 20.dp, vertical = 28.dp),
+            .padding(horizontal = 20.dp, vertical = 26.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -104,21 +102,19 @@ private fun HomeHeader() {
                 fontWeight = FontWeight.Bold,
                 color = CardWhite
             )
-            Spacer(modifier = Modifier.height(6.dp))
+            Spacer(Modifier.height(6.dp))
             Text(
                 text = "¿Qué repasamos hoy?",
                 style = MaterialTheme.typography.bodyLarge,
                 color = CardWhite
             )
         }
-
         Card(
             shape = RoundedCornerShape(50),
-            colors = CardDefaults.cardColors(containerColor = WarningAmber),
-            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+            colors = CardDefaults.cardColors(containerColor = WarningAmber)
         ) {
             Text(
-                text = "🔥 5 días",
+                text = "🔥 $streakDays días",
                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.Bold,
@@ -129,41 +125,39 @@ private fun HomeHeader() {
 }
 
 @Composable
-private fun DailyGoalCard(
+private fun TodayCard(
+    reviewStats: ReviewStats,
     modifier: Modifier = Modifier,
     onStartReviewClick: () -> Unit
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(18.dp),
         colors = CardDefaults.cardColors(containerColor = CardWhite),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
-        Column(modifier = Modifier.padding(20.dp)) {
+        Column(Modifier.padding(20.dp)) {
             Text(
-                text = "Meta Diaria",
+                text = "Meta diaria",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 color = TextDark
             )
-            Spacer(modifier = Modifier.height(6.dp))
+            Spacer(Modifier.height(6.dp))
             Text(
-                text = "Llevas 8 de 20 tarjetas repasadas hoy",
+                text = "${reviewStats.reviewedToday} repasos registrados hoy · " +
+                    "${reviewStats.totalReviews} en total",
                 style = MaterialTheme.typography.bodyMedium,
                 color = TextMuted
             )
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(Modifier.height(16.dp))
             Button(
                 onClick = onStartReviewClick,
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = MintGreen)
             ) {
-                Text(
-                    text = "Iniciar Repaso",
-                    color = CardWhite,
-                    fontWeight = FontWeight.Bold
-                )
+                Text("Iniciar repaso", color = CardWhite, fontWeight = FontWeight.Bold)
             }
         }
     }

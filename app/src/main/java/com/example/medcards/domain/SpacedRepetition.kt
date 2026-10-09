@@ -6,7 +6,8 @@ import kotlin.math.roundToInt
 enum class Rating {
     EASY,
     GOOD,
-    HARD
+    HARD,
+    MASTERED
 }
 
 class SpacedRepetitionCalculator {
@@ -15,6 +16,7 @@ class SpacedRepetitionCalculator {
             Rating.EASY -> 5
             Rating.GOOD -> 4
             Rating.HARD -> 3
+            Rating.MASTERED -> 5
         }
         val qualityDifference = 5 - quality
         val updatedEaseFactor = (
@@ -24,10 +26,15 @@ class SpacedRepetitionCalculator {
             ).coerceAtLeast(MIN_EASE_FACTOR)
 
         val updatedRepetitions = card.repetitions + 1
-        val updatedIntervalDays = when (updatedRepetitions) {
+        val intervalDays = when (updatedRepetitions) {
             1 -> 1
             2 -> 6
             else -> (card.intervalDays * updatedEaseFactor).roundToInt()
+        }
+        val updatedIntervalDays = if (rating == Rating.MASTERED) {
+            intervalDays.coerceAtLeast(MASTERED_MIN_INTERVAL_DAYS)
+        } else {
+            intervalDays
         }
 
         return card.copy(
@@ -39,5 +46,6 @@ class SpacedRepetitionCalculator {
 
     private companion object {
         const val MIN_EASE_FACTOR = 1.3
+        const val MASTERED_MIN_INTERVAL_DAYS = 7
     }
 }
