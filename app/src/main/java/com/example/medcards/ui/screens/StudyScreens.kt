@@ -29,6 +29,8 @@ import androidx.compose.ui.unit.dp
 import com.example.medcards.data.repository.ReviewStats
 import com.example.medcards.data.repository.SubjectStats
 import com.example.medcards.ui.components.DeckCard
+import com.example.medcards.ui.components.IllustrationType
+import com.example.medcards.ui.components.MedicalIllustration
 import com.example.medcards.ui.theme.CardWhite
 import com.example.medcards.ui.theme.CobaltBlue
 import com.example.medcards.ui.theme.CobaltBlueContainer
@@ -44,7 +46,8 @@ fun MetricsScreen(
 ) {
     StudyPage(
         title = "Métricas",
-        subtitle = "Actividad calculada a partir de tus datos locales."
+        subtitle = "Actividad calculada a partir de tus datos locales.",
+        illustration = IllustrationType.Analytics
     ) {
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             MetricCard("Hoy", reviewStats.reviewedToday.toString(), Modifier.weight(1f))
@@ -79,9 +82,15 @@ fun DeckCatalogScreen(
 ) {
     StudyPage(
         title = "Mis mazos",
-        subtitle = "Selecciona un mazo para comenzar una sesión de repaso."
+        subtitle = "Selecciona un mazo para comenzar una sesión de repaso.",
+        illustration = IllustrationType.Learning
     ) {
         if (subjectStats.isEmpty()) {
+            MedicalIllustration(
+                IllustrationType.Empty,
+                modifier = Modifier.fillMaxWidth(),
+                size = 160.dp
+            )
             InfoCard("Sin mazos", "Todavía no hay mazos guardados en este dispositivo.")
         } else {
             subjectStats.forEach { deck ->
@@ -103,7 +112,8 @@ fun MemoryStatisticsScreen(
 ) {
     StudyPage(
         title = "Estadísticas de memoria",
-        subtitle = "Resumen descriptivo de la actividad guardada; no es una evaluación clínica."
+        subtitle = "Resumen descriptivo de la actividad guardada; no es una evaluación clínica.",
+        illustration = IllustrationType.Analytics
     ) {
         InfoCard(
             title = "Repasos registrados",
@@ -136,7 +146,8 @@ fun MemoryStatisticsScreen(
 fun CalendarInfoScreen(reviewStats: ReviewStats) {
     StudyPage(
         title = "Calendario de repasos",
-        subtitle = "Una vista de orientación para planificar tu estudio."
+        subtitle = "Una vista de orientación para planificar tu estudio.",
+        illustration = IllustrationType.Calendar
     ) {
         InfoCard(
             title = "Actividad registrada",
@@ -156,7 +167,8 @@ fun CalendarInfoScreen(reviewStats: ReviewStats) {
 fun WhatsAppInfoScreen() {
     StudyPage(
         title = "Atención por WhatsApp",
-        subtitle = "Información de disponibilidad"
+        subtitle = "Información de disponibilidad",
+        illustration = IllustrationType.Empty
     ) {
         InfoCard(
             title = "Canal no configurado",
@@ -170,7 +182,8 @@ fun WhatsAppInfoScreen() {
 fun ConfigurationInfoScreen() {
     StudyPage(
         title = "Configuración",
-        subtitle = "Estado de esta versión de MedCards"
+        subtitle = "Estado de esta versión de MediSynap",
+        illustration = IllustrationType.Learning
     ) {
         InfoCard(
             title = "Almacenamiento",
@@ -192,8 +205,9 @@ fun ConfigurationInfoScreen() {
 fun ProDemoScreen() {
     var showBenefits by rememberSaveable { mutableStateOf(false) }
     StudyPage(
-        title = "MedCards Pro",
-        subtitle = "Vista demostrativa: no hay compras ni suscripciones activas."
+        title = "MediSynap Pro",
+        subtitle = "Vista demostrativa: no hay compras ni suscripciones activas.",
+        illustration = IllustrationType.Premium
     ) {
         InfoCard(
             title = "Explora la propuesta Pro",
@@ -225,7 +239,8 @@ fun ProDemoScreen() {
 fun EmptyReviewScreen(onBrowseDecks: () -> Unit) {
     StudyPage(
         title = "Repaso",
-        subtitle = "No hay tarjetas disponibles en el mazo seleccionado."
+        subtitle = "No hay tarjetas disponibles en el mazo seleccionado.",
+        illustration = IllustrationType.Empty
     ) {
         Button(onClick = onBrowseDecks, modifier = Modifier.fillMaxWidth()) {
             Text("Ver mazos")
@@ -237,6 +252,7 @@ fun EmptyReviewScreen(onBrowseDecks: () -> Unit) {
 private fun StudyPage(
     title: String,
     subtitle: String,
+    illustration: IllustrationType? = null,
     content: @Composable () -> Unit
 ) {
     Column(
@@ -247,9 +263,20 @@ private fun StudyPage(
             .padding(20.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
-            Text(title, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-            Text(subtitle, style = MaterialTheme.typography.bodyMedium, color = TextMuted)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(5.dp)
+            ) {
+                Text(title, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+                Text(subtitle, style = MaterialTheme.typography.bodyMedium, color = TextMuted)
+            }
+            illustration?.let { type ->
+                MedicalIllustration(type = type, size = 68.dp)
+            }
         }
         content()
         Spacer(Modifier.height(8.dp))

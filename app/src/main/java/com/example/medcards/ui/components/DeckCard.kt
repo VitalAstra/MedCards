@@ -2,11 +2,14 @@ package com.example.medcards.ui.components
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.Alignment
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.LinearProgressIndicator
@@ -43,25 +46,44 @@ fun DeckCard(
         colors = CardDefaults.cardColors(containerColor = CardWhite),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(
-                text = subject,
-                style = MaterialTheme.typography.titleMedium,
-                color = TextDark
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = "$reviewedCount de $totalCount tarjetas repasadas",
-                style = MaterialTheme.typography.bodyMedium,
-                color = TextMuted
-            )
-            Spacer(modifier = Modifier.height(12.dp))
-            LinearProgressIndicator(
-                progress = { progress },
-                modifier = Modifier.fillMaxWidth(),
-                color = CobaltBlue,
-                trackColor = LightColdGrey
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = subject,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = TextDark
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "$reviewedCount de $totalCount tarjetas repasadas",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = TextMuted
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                LinearProgressIndicator(
+                    progress = { progress },
+                    modifier = Modifier.fillMaxWidth(),
+                    color = CobaltBlue,
+                    trackColor = LightColdGrey
+                )
+            }
+            Spacer(modifier = Modifier.size(12.dp))
+            MedicalIllustration(
+                type = illustrationTypeForSubject(subject),
+                size = 64.dp
             )
         }
     }
+}
+
+fun illustrationTypeForSubject(subject: String): IllustrationType = when {
+    subject.contains("anato", ignoreCase = true) -> IllustrationType.Anatomy
+    subject.contains("farmac", ignoreCase = true) -> IllustrationType.Pharmacology
+    subject.contains("histo", ignoreCase = true) -> IllustrationType.Histology
+    else -> IllustrationType.Learning
 }

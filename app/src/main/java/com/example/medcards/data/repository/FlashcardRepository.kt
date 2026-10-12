@@ -6,6 +6,8 @@ import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 import com.example.medcards.data.model.Flashcard
 import com.example.medcards.domain.Rating
+import java.io.File
+import java.io.IOException
 import java.time.LocalDate
 import java.time.ZoneId
 
@@ -201,71 +203,64 @@ class SQLiteFlashcardRepository(context: Context) : FlashcardRepository {
         null,
         DATABASE_VERSION
     ) {
-        override fun onCreate(database: SQLiteDatabase) {
-            database.execSQL(
-                "CREATE TABLE flashcards (" +
-                    "id TEXT PRIMARY KEY, subject TEXT NOT NULL, question TEXT NOT NULL, " +
-                    "answer TEXT NOT NULL, repetitions INTEGER NOT NULL DEFAULT 0, " +
-                    "interval_days INTEGER NOT NULL DEFAULT 1, ease_factor REAL NOT NULL DEFAULT 2.5)"
-            )
-            database.execSQL(
-                "CREATE TABLE review_history (" +
-                    "id INTEGER PRIMARY KEY AUTOINCREMENT, card_id TEXT NOT NULL, " +
-                    "rating TEXT NOT NULL, reviewed_at INTEGER NOT NULL)"
-            )
-            seedCards(database)
+        init {
+            installSeedDatabaseIfNeeded(context)
         }
 
-        override fun onUpgrade(database: SQLiteDatabase, oldVersion: Int, newVersion: Int) = Unit
+        override fun onCreate(database: SQLiteDatabase) {
+            error("La base de datos semilla medcards.db no se instaló correctamente.")
+        }
 
-        private fun seedCards(database: SQLiteDatabase) {
-            database.beginTransaction()
+        override fun onUpgrade(database: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
+            if (oldVersion < 2) {
+                database.execSQL("ALTER TABLE flashcards ADD COLUMN image_url TEXT")
+            }
+        }
+
+        private fun installSeedDatabaseIfNeeded(context: Context) {
+            val databaseFile = context.getDatabasePath(DATABASE_NAME)
+            if (databaseFile.exists()) return
+
+            val databaseDirectory = databaseFile.parentFile
+                ?: error("No se pudo determinar la carpeta de bases de datos de la app.")
+            check(databaseDirectory.isDirectory || databaseDirectory.mkdirs()) {
+                "No se pudo crear la carpeta de bases de datos de la app."
+            }
+
+            val temporaryFile = File(databaseDirectory, "$DATABASE_NAME.tmp")
+            if (temporaryFile.exists()) {
+                check(temporaryFile.delete()) {
+                    "No se pudo limpiar la copia incompleta de la base de datos."
+                }
+            }
+
             try {
-                seedFlashcards.forEach { card ->
-                    database.insertOrThrow(
-                        "flashcards",
-                        null,
-                        ContentValues().apply {
-                            put("id", card.id)
-                            put("subject", card.subject)
-                            put("question", card.question)
-                            put("answer", card.answer)
-                        }
+                context.assets.open(SEED_DATABASE_ASSET).use { seedDatabase ->
+                    temporaryFile.outputStream().use { output ->
+                        seedDatabase.copyTo(output)
+                    }
+                }
+                if (!temporaryFile.renameTo(databaseFile)) {
+                    throw IOException("No se pudo instalar la base de datos inicial.")
+                }
+            } catch (exception: IOException) {
+                if (temporaryFile.exists() && !temporaryFile.delete()) {
+                    exception.addSuppressed(
+                        IOException("No se pudo limpiar la copia incompleta de la base de datos.")
                     )
                 }
-                database.setTransactionSuccessful()
-            } finally {
-                database.endTransaction()
+                throw exception
             }
         }
     }
 
     private companion object {
         const val DATABASE_NAME = "medcards.db"
-        const val DATABASE_VERSION = 1
+        const val SEED_DATABASE_ASSET = "medcards.db"
+        const val DATABASE_VERSION = 2
         val CARD_COLUMNS = arrayOf(
-            "id", "subject", "question", "answer", "repetitions", "interval_days", "ease_factor"
-        )
-
-        val seedFlashcards = listOf(
-            Flashcard("anatomy-1", "Anatomía", "¿Cuál es el hueso más largo del cuerpo humano?", "El fémur"),
-            Flashcard("anatomy-2", "Anatomía", "¿Qué órgano bombea la sangre por el sistema circulatorio?", "El corazón"),
-            Flashcard("anatomy-3", "Anatomía", "¿Qué estructura conecta el músculo con el hueso?", "El tendón"),
-            Flashcard("anatomy-4", "Anatomía", "¿En qué cavidad se encuentran los pulmones?", "En la cavidad torácica"),
-            Flashcard("anatomy-5", "Anatomía", "¿Cuál es la unidad funcional del riñón?", "La nefrona"),
-            Flashcard("anatomy-6", "Anatomía", "¿Qué tipo de articulación es la rodilla?", "Una articulación sinovial de tipo bisagra"),
-            Flashcard("pharmacology-1", "Farmacología", "¿A qué grupo pertenece el ibuprofeno?", "Antiinflamatorios no esteroideos (AINE)"),
-            Flashcard("pharmacology-2", "Farmacología", "¿Qué fármaco revierte una intoxicación por opioides?", "Naloxona"),
-            Flashcard("pharmacology-3", "Farmacología", "¿Cuál es el mecanismo principal del paracetamol?", "Analgesia y antipiresis por acción central"),
-            Flashcard("pharmacology-4", "Farmacología", "¿Qué receptor bloquea el salbutamol?", "Es agonista beta-2 adrenérgico"),
-            Flashcard("pharmacology-5", "Farmacología", "¿Qué efecto tienen los antibióticos sobre los virus?", "No son eficaces contra infecciones virales"),
-            Flashcard("pharmacology-6", "Farmacología", "¿Qué enzima inhiben principalmente los AINE?", "La ciclooxigenasa (COX)"),
-            Flashcard("histology-1", "Histología", "¿Qué célula produce anticuerpos?", "El plasmocito"),
-            Flashcard("histology-2", "Histología", "¿Qué epitelio reviste los alvéolos pulmonares?", "Epitelio plano simple"),
-            Flashcard("histology-3", "Histología", "¿Qué célula forma mielina en el sistema nervioso central?", "El oligodendrocito"),
-            Flashcard("histology-4", "Histología", "¿Qué proteína almacena oxígeno en el músculo?", "La mioglobina"),
-            Flashcard("histology-5", "Histología", "¿Qué estructura celular sintetiza proteínas?", "El ribosoma"),
-            Flashcard("histology-6", "Histología", "¿Qué células forman la matriz ósea?", "Los osteoblastos")
+            "id", "subject", "question", "answer", "repetitions", "interval_days", "ease_factor",
+            "image_url"
         )
     }
 }
@@ -277,7 +272,8 @@ private fun android.database.Cursor.toFlashcard() = Flashcard(
     answer = getString(3),
     repetitions = getInt(4),
     intervalDays = getInt(5),
-    easeFactor = getDouble(6)
+    easeFactor = getDouble(6),
+    imageUrl = if (isNull(7)) null else getString(7)
 )
 
 internal fun calculateCurrentStreakDays(

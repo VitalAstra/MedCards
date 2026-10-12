@@ -1,7 +1,10 @@
 package com.example.medcards.ui
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -28,15 +31,19 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.example.medcards.R
 import com.example.medcards.data.model.Flashcard
+import com.example.medcards.data.model.MediPassPlan
 import com.example.medcards.data.repository.FlashcardRepository
+import com.example.medcards.data.repository.SubscriptionRepository
 import com.example.medcards.domain.Rating
 import com.example.medcards.domain.SpacedRepetitionCalculator
 import com.example.medcards.navigation.Screen
@@ -49,7 +56,7 @@ import com.example.medcards.ui.screens.FlashcardScreen
 import com.example.medcards.ui.screens.HomeScreen
 import com.example.medcards.ui.screens.MemoryStatisticsScreen
 import com.example.medcards.ui.screens.MetricsScreen
-import com.example.medcards.ui.screens.ProDemoScreen
+import com.example.medcards.ui.screens.MediPassProScreen
 import com.example.medcards.ui.screens.WhatsAppInfoScreen
 import com.example.medcards.ui.theme.CardWhite
 import com.example.medcards.ui.theme.CobaltBlue
@@ -61,6 +68,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun MainMedCardsApp(
     repository: FlashcardRepository,
+    subscriptionRepository: SubscriptionRepository,
     calculator: SpacedRepetitionCalculator
 ) {
     val navController = rememberNavController()
@@ -76,6 +84,10 @@ fun MainMedCardsApp(
     var refreshKey by rememberSaveable { mutableIntStateOf(0) }
     var selectedSubject by rememberSaveable { mutableStateOf<String?>(null) }
     var selectedCardId by rememberSaveable { mutableStateOf<String?>(null) }
+    var activePlanName by rememberSaveable {
+        mutableStateOf(subscriptionRepository.activePlan.name)
+    }
+    val activePlan = MediPassPlan.valueOf(activePlanName)
     val subjectStats = remember(repository, refreshKey) { repository.getSubjectStats() }
     val reviewStats = remember(repository, refreshKey) { repository.getReviewStats() }
     val reviewCards = cards.filter { selectedSubject == null || it.subject == selectedSubject }
@@ -115,10 +127,13 @@ fun MainMedCardsApp(
             topBar = {
                 CenterAlignedTopAppBar(
                     title = {
-                        Text(
-                            text = "MedCards",
-                            color = CobaltBlue,
-                            fontWeight = FontWeight.Bold
+                        Image(
+                            painter = painterResource(R.drawable.medisynap_wordmark),
+                            contentDescription = "MediSynap",
+                            modifier = Modifier
+                                .width(180.dp)
+                                .height(44.dp),
+                            contentScale = ContentScale.Fit
                         )
                     },
                     navigationIcon = {
@@ -173,7 +188,8 @@ fun MainMedCardsApp(
                         subjectStats = subjectStats,
                         reviewStats = reviewStats,
                         onStartReviewClick = { startReview(null) },
-                        onDeckClick = { subject -> startReview(subject) }
+                        onDeckClick = { subject -> startReview(subject) },
+                        onMediPassClick = { navigate(Screen.Pro) }
                     )
                 }
                 composable(Screen.Repaso.route) {
@@ -207,7 +223,16 @@ fun MainMedCardsApp(
                 composable(Screen.Metricas.route) {
                     MetricsScreen(reviewStats, subjectStats, cards.size)
                 }
-                composable(Screen.Pro.route) { ProDemoScreen() }
+                composable(Screen.Pro.route) {
+                    MediPassProScreen(
+                        isPremiumActive = subscriptionRepository.isPremiumActive,
+                        activePlan = activePlan,
+                        onSelectPlan = { plan ->
+                            subscriptionRepository.selectPlan(plan)
+                            activePlanName = plan.name
+                        }
+                    )
+                }
                 composable(Screen.Mazos.route) {
                     DeckCatalogScreen(
                         subjectStats = subjectStats,

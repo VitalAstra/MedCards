@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.HorizontalDivider
@@ -27,10 +28,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.medcards.navigation.Screen
+import com.example.medcards.R
 import com.example.medcards.ui.theme.CardWhite
 import com.example.medcards.ui.theme.CobaltBlue
 import com.example.medcards.ui.theme.CobaltBlueContainer
@@ -143,10 +147,17 @@ fun MedCardsDrawerHeader() {
                     .border(2.dp, Color.White.copy(alpha = 0.6f), CircleShape),
                 contentAlignment = Alignment.Center
             ) {
-                Text("MC", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 17.sp)
+                Image(
+                    painter = painterResource(R.drawable.medisynap_logo),
+                    contentDescription = "Logo MediSynap",
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(CircleShape),
+                    contentScale = ContentScale.Crop
+                )
             }
             Column {
-                Text("MedCards", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 17.sp)
+                Text("MediSynap", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 17.sp)
                 Text(
                     "Tu espacio de estudio",
                     color = Color.White.copy(alpha = 0.86f),
@@ -154,7 +165,7 @@ fun MedCardsDrawerHeader() {
                 )
                 Spacer(Modifier.height(7.dp))
                 Text(
-                    "MedCards Pro · vista demo",
+                    "MediSynap Pro · vista demo",
                     color = GoldBadgeText,
                     fontWeight = FontWeight.Bold,
                     fontSize = 11.sp,

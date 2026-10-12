@@ -20,7 +20,7 @@ sealed class Screen(
     data object Inicio : Screen("inicio", "Inicio", Icons.Default.Home)
     data object Repaso : Screen("repaso", "Repaso", Icons.Default.Layers)
     data object Metricas : Screen("metricas", "Métricas", Icons.Default.Timeline)
-    data object Pro : Screen("pro", "Pro", Icons.Default.WorkspacePremium)
+    data object Pro : Screen("pro", "MediPass Pro", Icons.Default.WorkspacePremium)
     data object Mazos : Screen("mazos", "Mis mazos de estudio", Icons.Default.Folder)
     data object Calendario : Screen("calendario", "Calendario de repasos", Icons.Default.DateRange)
     data object Estadisticas : Screen("estadisticas", "Estadísticas de memoria", Icons.Default.Analytics)
