@@ -40,6 +40,9 @@ fun SM2FeedbackSelector(
 ) {
     val rows = listOf(
         listOf(
+            FeedbackOption("Repetir", Rating.AGAIN, ErrorRed)
+        ),
+        listOf(
             FeedbackOption("Difícil", Rating.HARD, ErrorRed),
             FeedbackOption("Bien", Rating.GOOD, WarningAmber)
         ),
@@ -82,7 +85,11 @@ fun SM2FeedbackSelector(
                                 fontSize = 14.sp
                             )
                             Text(
-                                text = if (interval == 1) "En 1 día" else "En $interval días",
+                                text = when {
+                                    option.rating == Rating.AGAIN -> "En 10 min"
+                                    interval == 1 -> "En 1 día"
+                                    else -> "En $interval días"
+                                },
                                 color = TextMuted,
                                 fontSize = 12.sp
                             )

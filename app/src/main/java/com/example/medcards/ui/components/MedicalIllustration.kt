@@ -31,6 +31,10 @@ enum class IllustrationType {
     Anatomy,
     Pharmacology,
     Histology,
+    Biology,
+    Chemistry,
+    Physics,
+    PreMedicine,
     Empty,
     Analytics,
     Calendar,
@@ -55,6 +59,10 @@ fun MedicalIllustration(
                     IllustrationType.Anatomy -> drawAnatomyIllustration()
                     IllustrationType.Pharmacology -> drawPharmacologyIllustration()
                     IllustrationType.Histology -> drawHistologyIllustration()
+                    IllustrationType.Biology -> drawBiologyIllustration()
+                    IllustrationType.Chemistry -> drawChemistryIllustration()
+                    IllustrationType.Physics -> drawPhysicsIllustration()
+                    IllustrationType.PreMedicine -> drawPreMedicineIllustration()
                     IllustrationType.Empty -> drawEmptyIllustration()
                     IllustrationType.Analytics -> drawAnalyticsIllustration()
                     IllustrationType.Calendar -> drawCalendarIllustration()
@@ -126,6 +134,74 @@ private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawHistologyIllust
     drawCircle(CardWhite, 12f, Offset(28f, 70f))
     drawCircle(DifficultyMastered, 8f, Offset(28f, 70f))
     drawCircle(ErrorRed, 4f, Offset(76f, 29f))
+}
+
+private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawBiologyIllustration() {
+    drawCircle(CardWhite, 31f, Offset(50f, 50f))
+    drawCircle(MintGreen.copy(alpha = 0.72f), 26f, Offset(50f, 50f))
+    drawCircle(CobaltBlue, 10f, Offset(54f, 47f))
+    drawCircle(WarningAmber, 4f, Offset(35f, 40f))
+    drawCircle(WarningAmber, 4f, Offset(68f, 61f))
+    drawRoundRect(CobaltBlue.copy(alpha = 0.7f), Offset(31f, 57f), Size(10f, 4f), androidx.compose.ui.geometry.CornerRadius(2f))
+    drawRoundRect(CobaltBlue.copy(alpha = 0.7f), Offset(61f, 34f), Size(10f, 4f), androidx.compose.ui.geometry.CornerRadius(2f))
+}
+
+private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawChemistryIllustration() {
+    val flask = Path().apply {
+        moveTo(42f, 20f)
+        lineTo(58f, 20f)
+        lineTo(56f, 43f)
+        lineTo(75f, 72f)
+        cubicTo(79f, 79f, 73f, 83f, 67f, 83f)
+        lineTo(33f, 83f)
+        cubicTo(27f, 83f, 21f, 79f, 25f, 72f)
+        lineTo(44f, 43f)
+        close()
+    }
+    drawPath(flask, CardWhite)
+    drawPath(flask, CobaltBlue, style = Stroke(width = 3f, join = StrokeJoin.Round))
+    drawLine(CobaltBlue, Offset(40f, 20f), Offset(60f, 20f), 4f, cap = StrokeCap.Round)
+    drawPath(
+        Path().apply {
+            moveTo(33f, 66f)
+            lineTo(67f, 66f)
+            lineTo(75f, 77f)
+            lineTo(25f, 77f)
+            close()
+        },
+        MintGreen
+    )
+    drawCircle(WarningAmber, 3f, Offset(45f, 60f))
+    drawCircle(WarningAmber, 2.5f, Offset(54f, 55f))
+}
+
+private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawPhysicsIllustration() {
+    drawLine(TextMuted.copy(alpha = 0.45f), Offset(23f, 72f), Offset(78f, 72f), 2f)
+    drawLine(TextMuted.copy(alpha = 0.45f), Offset(29f, 78f), Offset(29f, 24f), 2f)
+    val wave = Path().apply {
+        moveTo(30f, 51f)
+        cubicTo(37f, 25f, 43f, 25f, 50f, 51f)
+        cubicTo(57f, 77f, 63f, 77f, 70f, 51f)
+        cubicTo(73f, 39f, 76f, 34f, 80f, 34f)
+    }
+    drawPath(wave, CobaltBlue, style = Stroke(width = 5f, cap = StrokeCap.Round, join = StrokeJoin.Round))
+    drawCircle(MintGreen, 5f, Offset(50f, 51f))
+    drawCircle(WarningAmber, 4f, Offset(70f, 51f))
+}
+
+private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawPreMedicineIllustration() {
+    val cap = Path().apply {
+        moveTo(16f, 39f)
+        lineTo(50f, 22f)
+        lineTo(84f, 39f)
+        lineTo(50f, 56f)
+        close()
+    }
+    drawPath(cap, CobaltBlue)
+    drawPath(cap, CardWhite, style = Stroke(width = 2.5f, join = StrokeJoin.Round))
+    drawRoundRect(MintGreen, Offset(33f, 49f), Size(34f, 17f), androidx.compose.ui.geometry.CornerRadius(4f))
+    drawLine(WarningAmber, Offset(82f, 39f), Offset(82f, 68f), 3f, cap = StrokeCap.Round)
+    drawCircle(WarningAmber, 4f, Offset(82f, 72f))
 }
 
 private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawEmptyIllustration() {

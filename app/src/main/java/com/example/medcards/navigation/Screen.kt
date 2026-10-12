@@ -2,6 +2,7 @@ package com.example.medcards.navigation
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Analytics
+import androidx.compose.material.icons.filled.Assignment
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.Home
@@ -19,6 +20,7 @@ sealed class Screen(
 ) {
     data object Inicio : Screen("inicio", "Inicio", Icons.Default.Home)
     data object Repaso : Screen("repaso", "Repaso", Icons.Default.Layers)
+    data object Pruebas : Screen("pruebas", "Tests rápidos", Icons.Default.Assignment)
     data object Metricas : Screen("metricas", "Métricas", Icons.Default.Timeline)
     data object Pro : Screen("pro", "MediPass Pro", Icons.Default.WorkspacePremium)
     data object Mazos : Screen("mazos", "Mis mazos de estudio", Icons.Default.Folder)
@@ -32,6 +34,6 @@ sealed class Screen(
             get() = listOf(Inicio, Repaso, Metricas, Pro)
 
         val drawerNavigation: List<Screen>
-            get() = listOf(Mazos, Calendario, Estadisticas, WhatsApp, Configuracion)
+            get() = listOf(Pruebas, Mazos, Calendario, Estadisticas, WhatsApp, Configuracion)
     }
 }

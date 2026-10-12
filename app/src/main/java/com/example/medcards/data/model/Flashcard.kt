@@ -8,7 +8,8 @@ data class Flashcard(
     val repetitions: Int = 0,
     val intervalDays: Int = 1,
     val easeFactor: Double = 2.5,
-    val imageUrl: String? = null
+    val imageUrl: String? = null,
+    val dueAtEpochMillis: Long = 0L
 ) {
     val isNew: Boolean
         get() = repetitions == 0

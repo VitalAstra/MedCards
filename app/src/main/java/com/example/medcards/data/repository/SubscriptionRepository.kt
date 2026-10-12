@@ -10,7 +10,7 @@ class SubscriptionRepository(context: Context) {
     )
 
     val isPremiumActive: Boolean
-        get() = preferences.getBoolean(KEY_PREMIUM_ACTIVE, true)
+        get() = false
 
     val activePlan: MediPassPlan
         get() {
@@ -22,14 +22,12 @@ class SubscriptionRepository(context: Context) {
         check(
             preferences.edit()
                 .putString(KEY_ACTIVE_PLAN, plan.name)
-                .putBoolean(KEY_PREMIUM_ACTIVE, true)
                 .commit()
         ) { "No se pudo guardar el plan de MediPass Pro." }
     }
 
     private companion object {
         const val PREFERENCES_NAME = "medipass_subscription"
-        const val KEY_PREMIUM_ACTIVE = "premium_active"
         const val KEY_ACTIVE_PLAN = "active_plan"
         val DEFAULT_PLAN = MediPassPlan.SEMIANNUAL
     }

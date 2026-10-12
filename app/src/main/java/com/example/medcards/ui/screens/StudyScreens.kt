@@ -26,6 +26,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.medcards.data.model.Flashcard
+import com.example.medcards.data.model.QuizStats
 import com.example.medcards.data.repository.ReviewStats
 import com.example.medcards.data.repository.SubjectStats
 import com.example.medcards.ui.components.DeckCard
@@ -37,12 +39,16 @@ import com.example.medcards.ui.theme.CobaltBlueContainer
 import com.example.medcards.ui.theme.LightColdGrey
 import com.example.medcards.ui.theme.TextDark
 import com.example.medcards.ui.theme.TextMuted
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @Composable
 fun MetricsScreen(
     reviewStats: ReviewStats,
     subjectStats: List<SubjectStats>,
-    totalCards: Int
+    totalCards: Int,
+    quizStats: QuizStats
 ) {
     StudyPage(
         title = "Métricas",
@@ -60,6 +66,11 @@ fun MetricsScreen(
         InfoCard(
             title = "Tarjetas y mazos",
             text = "$totalCards tarjetas en ${subjectStats.size} mazos."
+        )
+        InfoCard(
+            title = "Tests espaciados",
+            text = "${quizStats.totalAnswers} respuestas guardadas · " +
+                "${quizStats.accuracyPercent}% de aciertos · ${quizStats.dueQuestions} preguntas pendientes."
         )
         Text("Progreso por mazo", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
         subjectStats.forEach { deck ->
@@ -108,7 +119,8 @@ fun DeckCatalogScreen(
 @Composable
 fun MemoryStatisticsScreen(
     reviewStats: ReviewStats,
-    subjectStats: List<SubjectStats>
+    subjectStats: List<SubjectStats>,
+    quizStats: QuizStats
 ) {
     StudyPage(
         title = "Estadísticas de memoria",
@@ -128,6 +140,11 @@ fun MemoryStatisticsScreen(
             title = "Constancia",
             text = "Racha actual registrada: ${reviewStats.streakDays} días."
         )
+        InfoCard(
+            title = "Evaluación activa",
+            text = "${quizStats.correctAnswers} de ${quizStats.totalAnswers} respuestas correctas " +
+                "(${quizStats.accuracyPercent}%). ${quizStats.dueQuestions} preguntas vencidas."
+        )
         subjectStats.forEach { deck ->
             val percentage = if (deck.total == 0) 0 else deck.reviewed * 100 / deck.total
             InfoCard(
@@ -143,7 +160,7 @@ fun MemoryStatisticsScreen(
 }
 
 @Composable
-fun CalendarInfoScreen(reviewStats: ReviewStats) {
+fun CalendarInfoScreen(reviewStats: ReviewStats, cards: List<Flashcard>) {
     StudyPage(
         title = "Calendario de repasos",
         subtitle = "Una vista de orientación para planificar tu estudio.",
@@ -154,12 +171,23 @@ fun CalendarInfoScreen(reviewStats: ReviewStats) {
             text = "${reviewStats.reviewedToday} repasos hoy y una racha actual de " +
                 "${reviewStats.streakDays} días."
         )
-        InfoCard(
-            title = "Fechas de vencimiento",
-            text = "El repositorio conserva el intervalo de cada tarjeta, pero no registra " +
-                "fechas de vencimiento ni una agenda diaria. Por eso esta versión no muestra " +
-                "eventos de calendario inventados."
-        )
+        InfoCard("Tarjetas pendientes", "${reviewStats.dueCards} tarjetas están listas para repasar.")
+        val upcoming = cards
+            .filter { it.dueAtEpochMillis > System.currentTimeMillis() }
+            .sortedBy { it.dueAtEpochMillis }
+            .take(8)
+        if (upcoming.isEmpty()) {
+            InfoCard("Próximos repasos", "Aún no hay repasos futuros programados.")
+        } else {
+            Text("Próximos repasos", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            val formatter = SimpleDateFormat("EEE d MMM · HH:mm", Locale.getDefault())
+            upcoming.forEach { card ->
+                InfoCard(
+                    title = card.subject,
+                    text = "${formatter.format(Date(card.dueAtEpochMillis))} · ${card.question}"
+                )
+            }
+        }
     }
 }
 
@@ -191,8 +219,9 @@ fun ConfigurationInfoScreen() {
         )
         InfoCard(
             title = "Repetición espaciada",
-            text = "El cálculo utiliza el algoritmo SM-2 integrado. Los intervalos se basan " +
-                "en la calificación y el historial de cada tarjeta."
+            text = "SM-2 programa tarjetas y preguntas: los errores vuelven en 10 minutos y " +
+                "los aciertos amplían progresivamente el intervalo. Fechas e historial se " +
+                "guardan localmente en SQLite."
         )
         InfoCard(
             title = "Preferencias",
@@ -239,11 +268,11 @@ fun ProDemoScreen() {
 fun EmptyReviewScreen(onBrowseDecks: () -> Unit) {
     StudyPage(
         title = "Repaso",
-        subtitle = "No hay tarjetas disponibles en el mazo seleccionado.",
+        subtitle = "No quedan repasos pendientes en esta sesión.",
         illustration = IllustrationType.Empty
     ) {
         Button(onClick = onBrowseDecks, modifier = Modifier.fillMaxWidth()) {
-            Text("Ver mazos")
+            Text("Ver mazos y practicar")
         }
     }
 }

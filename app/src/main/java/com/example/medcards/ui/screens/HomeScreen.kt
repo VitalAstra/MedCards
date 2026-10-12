@@ -31,6 +31,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.medcards.data.repository.ReviewStats
 import com.example.medcards.data.repository.SubjectStats
+import com.example.medcards.data.model.QuizStats
 import com.example.medcards.ui.components.DeckCard
 import com.example.medcards.ui.components.IllustrationType
 import com.example.medcards.ui.components.MedicalIllustration
@@ -48,7 +49,9 @@ import com.example.medcards.ui.theme.WarningAmber
 fun HomeScreen(
     subjectStats: List<SubjectStats>,
     reviewStats: ReviewStats,
+    quizStats: QuizStats,
     onStartReviewClick: () -> Unit,
+    onStartQuizClick: () -> Unit,
     onDeckClick: (subject: String) -> Unit,
     onMediPassClick: () -> Unit
 ) {
@@ -67,6 +70,13 @@ fun HomeScreen(
                 reviewStats = reviewStats,
                 modifier = Modifier.padding(horizontal = 20.dp),
                 onStartReviewClick = onStartReviewClick
+            )
+        }
+        item {
+            QuizLaunchCard(
+                quizStats = quizStats,
+                modifier = Modifier.padding(horizontal = 20.dp),
+                onClick = onStartQuizClick
             )
         }
         item {
@@ -205,8 +215,8 @@ private fun TodayCard(
             }
             Spacer(Modifier.height(6.dp))
             Text(
-                text = "${reviewStats.reviewedToday} repasos registrados hoy · " +
-                    "${reviewStats.totalReviews} en total",
+                text = "${reviewStats.reviewedToday} repasos hoy · " +
+                    "${reviewStats.dueCards} tarjetas pendientes",
                 style = MaterialTheme.typography.bodyMedium,
                 color = TextMuted
             )
@@ -237,7 +247,53 @@ private fun TodayCard(
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = MintGreen)
             ) {
-                Text("Iniciar repaso", color = CardWhite, fontWeight = FontWeight.Bold)
+                Text(
+                    if (reviewStats.dueCards == 0) "Practicar tarjetas" else "Repasar ${reviewStats.dueCards} tarjetas",
+                    color = CardWhite,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun QuizLaunchCard(
+    quizStats: QuizStats,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
+) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = CardWhite),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Column(Modifier.padding(18.dp)) {
+            Text(
+                "Tests rápidos",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = TextDark
+            )
+            Spacer(Modifier.height(5.dp))
+            Text(
+                "${quizStats.dueQuestions} preguntas programadas · ${quizStats.accuracyPercent}% de aciertos",
+                style = MaterialTheme.typography.bodyMedium,
+                color = TextMuted
+            )
+            Spacer(Modifier.height(12.dp))
+            Button(
+                onClick = onClick,
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = CobaltBlue)
+            ) {
+                Text(
+                    if (quizStats.dueQuestions == 0) "Practicar preguntas" else "Iniciar test · ${quizStats.dueQuestions}",
+                    color = CardWhite,
+                    fontWeight = FontWeight.Bold
+                )
             }
         }
     }

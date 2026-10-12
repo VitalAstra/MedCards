@@ -59,6 +59,27 @@ class SpacedRepetitionCalculatorTest {
         assertEquals(2.6, result.easeFactor, 0.0001)
     }
 
+    @Test
+    fun againResetsLearningAndSchedulesTenMinuteRetry() {
+        val now = 1_800_000_000_000L
+        val card = newCard().copy(repetitions = 4, intervalDays = 30)
+
+        val result = calculator.calculateNextReview(card, Rating.AGAIN, now)
+
+        assertEquals(0, result.repetitions)
+        assertEquals(1, result.intervalDays)
+        assertEquals(now + SpacedRepetitionCalculator.RETRY_DELAY_MILLIS, result.dueAtEpochMillis)
+    }
+
+    @Test
+    fun successfulReviewSchedulesDueTimeFromCalculatedInterval() {
+        val now = 1_800_000_000_000L
+
+        val result = calculator.calculateNextReview(newCard(), Rating.GOOD, now)
+
+        assertEquals(now + SpacedRepetitionCalculator.MILLIS_PER_DAY, result.dueAtEpochMillis)
+    }
+
     private fun newCard() = Flashcard(
         id = "card-1",
         subject = "Anatomía",

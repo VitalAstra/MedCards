@@ -85,5 +85,9 @@ fun illustrationTypeForSubject(subject: String): IllustrationType = when {
     subject.contains("anato", ignoreCase = true) -> IllustrationType.Anatomy
     subject.contains("farmac", ignoreCase = true) -> IllustrationType.Pharmacology
     subject.contains("histo", ignoreCase = true) -> IllustrationType.Histology
+    subject.contains("biolog", ignoreCase = true) -> IllustrationType.Biology
+    subject.contains("quím", ignoreCase = true) || subject.contains("quim", ignoreCase = true) -> IllustrationType.Chemistry
+    subject.contains("fís", ignoreCase = true) || subject.contains("fis", ignoreCase = true) -> IllustrationType.Physics
+    subject.contains("pre", ignoreCase = true) -> IllustrationType.PreMedicine
     else -> IllustrationType.Learning
 }

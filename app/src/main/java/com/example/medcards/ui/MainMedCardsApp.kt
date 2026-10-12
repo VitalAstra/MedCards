@@ -42,6 +42,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.medcards.R
 import com.example.medcards.data.model.Flashcard
 import com.example.medcards.data.model.MediPassPlan
+import com.example.medcards.data.model.QuizQuestion
 import com.example.medcards.data.repository.FlashcardRepository
 import com.example.medcards.data.repository.SubscriptionRepository
 import com.example.medcards.domain.Rating
@@ -57,6 +58,7 @@ import com.example.medcards.ui.screens.HomeScreen
 import com.example.medcards.ui.screens.MemoryStatisticsScreen
 import com.example.medcards.ui.screens.MetricsScreen
 import com.example.medcards.ui.screens.MediPassProScreen
+import com.example.medcards.ui.screens.QuizScreen
 import com.example.medcards.ui.screens.WhatsAppInfoScreen
 import com.example.medcards.ui.theme.CardWhite
 import com.example.medcards.ui.theme.CobaltBlue
@@ -82,17 +84,24 @@ fun MainMedCardsApp(
         }
     }
     var refreshKey by rememberSaveable { mutableIntStateOf(0) }
-    var selectedSubject by rememberSaveable { mutableStateOf<String?>(null) }
-    var selectedCardId by rememberSaveable { mutableStateOf<String?>(null) }
+    var quizRunId by rememberSaveable { mutableIntStateOf(0) }
+    val reviewQueueIds = remember { androidx.compose.runtime.mutableStateListOf<String>() }
+    val quizSession = remember { androidx.compose.runtime.mutableStateListOf<QuizQuestion>() }
     var activePlanName by rememberSaveable {
         mutableStateOf(subscriptionRepository.activePlan.name)
     }
     val activePlan = MediPassPlan.valueOf(activePlanName)
     val subjectStats = remember(repository, refreshKey) { repository.getSubjectStats() }
     val reviewStats = remember(repository, refreshKey) { repository.getReviewStats() }
-    val reviewCards = cards.filter { selectedSubject == null || it.subject == selectedSubject }
+    val quizStats = remember(repository, refreshKey) { repository.getQuizStats() }
 
     fun navigate(screen: Screen) {
+        if (screen == Screen.Repaso && reviewQueueIds.isEmpty()) {
+            val dueIds = repository.getDueFlashcards().map { it.id }
+            reviewQueueIds.addAll(
+                dueIds.ifEmpty { repository.getAllFlashcards().map { it.id } }
+            )
+        }
         navController.navigate(screen.route) {
             popUpTo(navController.graph.findStartDestination().id) { saveState = true }
             launchSingleTop = true
@@ -101,9 +110,22 @@ fun MainMedCardsApp(
     }
 
     fun startReview(subject: String?) {
-        selectedSubject = subject
-        selectedCardId = cards.firstOrNull { subject == null || it.subject == subject }?.id
+        val dueIds = repository.getDueFlashcards(subject).map { it.id }
+        val practiceIds = if (dueIds.isNotEmpty()) dueIds else {
+            repository.getAllFlashcards()
+                .filter { subject == null || it.subject == subject }
+                .map { it.id }
+        }
+        reviewQueueIds.clear()
+        reviewQueueIds.addAll(practiceIds)
         navigate(Screen.Repaso)
+    }
+
+    fun startQuiz() {
+        quizSession.clear()
+        quizSession.addAll(repository.getDueQuizQuestions().ifEmpty { repository.getQuizQuestions() })
+        quizRunId++
+        navigate(Screen.Pruebas)
     }
 
     ModalNavigationDrawer(
@@ -115,7 +137,7 @@ fun MainMedCardsApp(
                 onNavigate = { screen ->
                     coroutineScope.launch {
                         drawerState.close()
-                        navigate(screen)
+                            if (screen == Screen.Pruebas) startQuiz() else navigate(screen)
                     }
                 }
             )
@@ -187,14 +209,17 @@ fun MainMedCardsApp(
                     HomeScreen(
                         subjectStats = subjectStats,
                         reviewStats = reviewStats,
+                        quizStats = quizStats,
                         onStartReviewClick = { startReview(null) },
+                        onStartQuizClick = ::startQuiz,
                         onDeckClick = { subject -> startReview(subject) },
                         onMediPassClick = { navigate(Screen.Pro) }
                     )
                 }
                 composable(Screen.Repaso.route) {
-                    val card = reviewCards.firstOrNull { it.id == selectedCardId }
-                        ?: reviewCards.firstOrNull()
+                    val card = reviewQueueIds.firstOrNull()?.let { cardId ->
+                        cards.firstOrNull { it.id == cardId }
+                    }
                     if (card == null) {
                         EmptyReviewScreen(onBrowseDecks = { navigate(Screen.Mazos) })
                     } else {
@@ -202,26 +227,61 @@ fun MainMedCardsApp(
                             card = card,
                             calculator = calculator,
                             onRated = { rating: Rating ->
-                                val updatedCard = calculator.calculateNextReview(card, rating)
+                                val updatedCard = calculator.calculateNextReview(
+                                    card,
+                                    rating,
+                                    System.currentTimeMillis()
+                                )
                                 repository.updateCardProgress(updatedCard, rating)
                                 val cardIndex = cards.indexOfFirst { it.id == updatedCard.id }
                                 check(cardIndex >= 0) {
                                     "No se encontró la tarjeta '${updatedCard.id}' en la lista de estudio."
                                 }
                                 cards[cardIndex] = updatedCard
+                                reviewQueueIds.remove(card.id)
                                 refreshKey++
-                                val currentIndex = reviewCards.indexOfFirst { it.id == card.id }
-                                selectedCardId = if (reviewCards.size > 1) {
-                                    reviewCards[(currentIndex + 1).mod(reviewCards.size)].id
-                                } else {
-                                    updatedCard.id
-                                }
                             }
                         )
                     }
                 }
+                composable(Screen.Pruebas.route) {
+                    val questions = quizSession.ifEmpty {
+                        repository.getDueQuizQuestions().ifEmpty { repository.getQuizQuestions() }
+                    }
+                    QuizScreen(
+                        sessionId = quizRunId,
+                        questions = questions,
+                        onAnswer = { question, isCorrect ->
+                            val scheduledCard = calculator.calculateNextReview(
+                                Flashcard(
+                                    id = question.id,
+                                    subject = question.subject,
+                                    question = question.question,
+                                    answer = question.options[question.correctOptionIndex],
+                                    repetitions = question.repetitions,
+                                    intervalDays = question.intervalDays,
+                                    easeFactor = question.easeFactor,
+                                    dueAtEpochMillis = question.dueAtEpochMillis
+                                ),
+                                if (isCorrect) Rating.GOOD else Rating.AGAIN,
+                                System.currentTimeMillis()
+                            )
+                            repository.updateQuizQuestionProgress(
+                                question.copy(
+                                    repetitions = scheduledCard.repetitions,
+                                    intervalDays = scheduledCard.intervalDays,
+                                    easeFactor = scheduledCard.easeFactor,
+                                    dueAtEpochMillis = scheduledCard.dueAtEpochMillis
+                                ),
+                                isCorrect
+                            )
+                            refreshKey++
+                        },
+                        onFinish = { navigate(Screen.Inicio) }
+                    )
+                }
                 composable(Screen.Metricas.route) {
-                    MetricsScreen(reviewStats, subjectStats, cards.size)
+                    MetricsScreen(reviewStats, subjectStats, cards.size, quizStats)
                 }
                 composable(Screen.Pro.route) {
                     MediPassProScreen(
@@ -239,9 +299,11 @@ fun MainMedCardsApp(
                         onDeckClick = { subject -> startReview(subject) }
                     )
                 }
-                composable(Screen.Calendario.route) { CalendarInfoScreen(reviewStats) }
+                composable(Screen.Calendario.route) {
+                    CalendarInfoScreen(reviewStats, cards.toList())
+                }
                 composable(Screen.Estadisticas.route) {
-                    MemoryStatisticsScreen(reviewStats, subjectStats)
+                    MemoryStatisticsScreen(reviewStats, subjectStats, quizStats)
                 }
                 composable(Screen.WhatsApp.route) { WhatsAppInfoScreen() }
                 composable(Screen.Configuracion.route) { ConfigurationInfoScreen() }
