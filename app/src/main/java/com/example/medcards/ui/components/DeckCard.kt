@@ -18,11 +18,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.example.medcards.ui.theme.CardWhite
 import com.example.medcards.ui.theme.CobaltBlue
-import com.example.medcards.ui.theme.LightColdGrey
-import com.example.medcards.ui.theme.TextDark
-import com.example.medcards.ui.theme.TextMuted
 
 @Composable
 fun DeckCard(
@@ -43,7 +39,7 @@ fun DeckCard(
             .fillMaxWidth()
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = CardWhite),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Row(
@@ -56,20 +52,20 @@ fun DeckCard(
                 Text(
                     text = subject,
                     style = MaterialTheme.typography.titleMedium,
-                    color = TextDark
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
                     text = "$reviewedCount de $totalCount tarjetas repasadas",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = TextMuted
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Spacer(modifier = Modifier.height(12.dp))
                 LinearProgressIndicator(
                     progress = { progress },
                     modifier = Modifier.fillMaxWidth(),
                     color = CobaltBlue,
-                    trackColor = LightColdGrey
+                    trackColor = MaterialTheme.colorScheme.surfaceVariant
                 )
             }
             Spacer(modifier = Modifier.size(12.dp))

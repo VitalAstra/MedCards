@@ -2,6 +2,7 @@ package com.example.medcards.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -50,13 +51,42 @@ import com.example.medcards.ui.theme.TextMuted
 fun MedCardsDrawerSheet(
     currentRoute: String,
     deckCount: Int,
+    profileName: String,
+    profilePhotoPath: String?,
+    onProfileClick: () -> Unit,
     onNavigate: (Screen) -> Unit
 ) {
     ModalDrawerSheet(
         modifier = Modifier.width(310.dp),
-        drawerContainerColor = CardWhite
+        drawerContainerColor = MaterialTheme.colorScheme.surface
     ) {
         MedCardsDrawerHeader()
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable(onClick = onProfileClick)
+                .padding(horizontal = 20.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(14.dp)
+        ) {
+            ProfileAvatar(
+                displayName = profileName,
+                photoPath = profilePhotoPath,
+                size = 52.dp
+            )
+            Column {
+                Text(
+                    profileName,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Text(
+                    "Ver perfil",
+                    color = MaterialTheme.colorScheme.primary,
+                    fontSize = 13.sp
+                )
+            }
+        }
         Spacer(Modifier.height(8.dp))
 
         Screen.drawerNavigation.forEach { screen ->
@@ -93,13 +123,13 @@ fun MedCardsDrawerSheet(
                     Icon(
                         imageVector = screen.icon,
                         contentDescription = null,
-                        tint = if (selected) CobaltBlue else TextMuted
+                        tint = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 },
                 colors = NavigationDrawerItemDefaults.colors(
-                    selectedContainerColor = CobaltBlueContainer,
+                    selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
                     selectedTextColor = CobaltBlue,
-                    unselectedTextColor = TextDark
+                    unselectedTextColor = MaterialTheme.colorScheme.onSurface
                 ),
                 shape = RoundedCornerShape(14.dp),
                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 2.dp)
@@ -118,7 +148,7 @@ fun MedCardsDrawerSheet(
             Box(Modifier.size(8.dp).clip(CircleShape).background(MintGreen))
             Text(
                 text = "Datos locales en este dispositivo",
-                color = TextMuted,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 fontSize = 12.sp
             )
         }

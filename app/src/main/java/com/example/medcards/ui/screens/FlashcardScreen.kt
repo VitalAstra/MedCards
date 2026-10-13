@@ -1,5 +1,10 @@
 package com.example.medcards.ui.screens
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -33,6 +38,12 @@ import com.example.medcards.ui.theme.*
 fun FlashcardScreen(
     card: Flashcard,
     calculator: SpacedRepetitionCalculator,
+    position: Int,
+    totalCards: Int,
+    completedCount: Int,
+    isCompleted: Boolean,
+    onPrevious: () -> Unit,
+    onNext: () -> Unit,
     onRated: (Rating) -> Unit
 ) {
     var isRevealed by rememberSaveable(card.id) { mutableStateOf(false) }
@@ -40,11 +51,11 @@ fun FlashcardScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(LightColdGrey)
+            .background(MaterialTheme.colorScheme.background)
             .verticalScroll(rememberScrollState())
-            .padding(horizontal = 20.dp, vertical = 24.dp),
+            .padding(horizontal = 20.dp, vertical = 14.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(18.dp)
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -52,67 +63,109 @@ fun FlashcardScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = card.subject.uppercase(),
+                text = "TARJETA $position DE $totalCards",
                 style = MaterialTheme.typography.labelLarge,
-                color = TextMuted
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             MedicalIllustration(
                 type = illustrationTypeForSubject(card.subject),
                 size = 54.dp
             )
         }
+        LinearProgressIndicator(
+            progress = { if (totalCards == 0) 0f else position.toFloat() / totalCards },
+            modifier = Modifier.fillMaxWidth(),
+            color = MaterialTheme.colorScheme.primary,
+            trackColor = MaterialTheme.colorScheme.primaryContainer
+        )
+        Text(
+            text = "${card.subject}  ·  $completedCount respondidas",
+            modifier = Modifier.fillMaxWidth(),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        AnimatedContent(
+            targetState = card,
+            transitionSpec = {
+                fadeIn(tween(180)) togetherWith fadeOut(tween(120))
+            },
+            label = "flashcard-transition"
+        ) { displayedCard ->
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(20.dp),
-            colors = CardDefaults.cardColors(containerColor = CardWhite),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
             elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .heightIn(min = 410.dp)
-                    .padding(24.dp),
+                    .heightIn(min = 340.dp)
+                    .padding(18.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
                 horizontalAlignment = Alignment.Start
             ) {
                 androidx.compose.material3.Surface(
                     modifier = Modifier.fillMaxWidth(),
-                    color = CobaltBlueContainer,
+                    color = MaterialTheme.colorScheme.primaryContainer,
                     shape = RoundedCornerShape(22.dp)
                 ) {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(188.dp),
+                            .height(148.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         MedicalIllustration(
-                            type = illustrationTypeForSubject(card.subject),
-                            size = 164.dp
+                            type = illustrationTypeForSubject(displayedCard.subject),
+                            size = 128.dp
+                        )
+                    }
+                }
+                AnimatedContent(
+                    targetState = isRevealed,
+                    transitionSpec = {
+                        fadeIn(tween(160)) togetherWith fadeOut(tween(100))
+                    },
+                    label = "flashcard-answer-transition"
+                ) { revealed ->
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text(
+                            text = if (revealed) "RESPUESTA" else "PREGUNTA",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = if (revealed) displayedCard.answer else displayedCard.question,
+                            style = MaterialTheme.typography.titleLarge,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            fontWeight = FontWeight.SemiBold
                         )
                     }
                 }
                 Text(
-                    text = if (isRevealed) "RESPUESTA" else "PREGUNTA",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = CobaltBlue,
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    text = if (isRevealed) card.answer else card.question,
-                    style = MaterialTheme.typography.titleLarge,
-                    color = if (isRevealed) CobaltBlue else TextDark,
-                    fontWeight = FontWeight.SemiBold
-                )
-                Text(
                     text = "MEDISYNAP  ·  REPASO ACTIVO",
                     style = MaterialTheme.typography.labelSmall,
-                    color = TextMuted
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
+        }
 
-        if (isRevealed) {
+        if (isCompleted) {
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(14.dp),
+                color = MaterialTheme.colorScheme.primaryContainer
+            ) {
+                Text(
+                    text = "Ya calificaste esta tarjeta en esta sesión. Puedes revisar tu respuesta o avanzar.",
+                    modifier = Modifier.padding(14.dp),
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+            }
+        } else if (isRevealed) {
             SM2FeedbackSelector(
                 card = card,
                 calculator = calculator,
@@ -128,9 +181,28 @@ fun FlashcardScreen(
             }
             Text(
                 text = "Intenta recordar la respuesta antes de revelarla.",
-                color = TextMuted,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 style = MaterialTheme.typography.bodyMedium
             )
+        }
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            OutlinedButton(
+                onClick = onPrevious,
+                modifier = Modifier.weight(1f),
+                enabled = position > 1
+            ) {
+                Text("Anterior")
+            }
+            Button(
+                onClick = onNext,
+                modifier = Modifier.weight(1f),
+                enabled = position < totalCards
+            ) {
+                Text("Siguiente")
+            }
         }
     }
 }

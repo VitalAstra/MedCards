@@ -17,12 +17,9 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -33,12 +30,6 @@ import com.example.medcards.data.repository.SubjectStats
 import com.example.medcards.ui.components.DeckCard
 import com.example.medcards.ui.components.IllustrationType
 import com.example.medcards.ui.components.MedicalIllustration
-import com.example.medcards.ui.theme.CardWhite
-import com.example.medcards.ui.theme.CobaltBlue
-import com.example.medcards.ui.theme.CobaltBlueContainer
-import com.example.medcards.ui.theme.LightColdGrey
-import com.example.medcards.ui.theme.TextDark
-import com.example.medcards.ui.theme.TextMuted
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -76,12 +67,12 @@ fun MetricsScreen(
         subjectStats.forEach { deck ->
             Text(
                 "${deck.subject}: ${deck.reviewed} de ${deck.total} con al menos un repaso",
-                color = TextMuted,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 style = MaterialTheme.typography.bodyMedium
             )
         }
         if (subjectStats.isEmpty()) {
-            Text("No hay datos de mazos para mostrar.", color = TextMuted)
+            Text("No hay datos de mazos para mostrar.", color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }
@@ -154,7 +145,7 @@ fun MemoryStatisticsScreen(
             )
         }
         if (subjectStats.isEmpty()) {
-            Text("Aún no hay mazos para calcular estadísticas.", color = TextMuted)
+            Text("Aún no hay mazos para calcular estadísticas.", color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }
@@ -192,27 +183,47 @@ fun CalendarInfoScreen(reviewStats: ReviewStats, cards: List<Flashcard>) {
 }
 
 @Composable
-fun WhatsAppInfoScreen() {
-    StudyPage(
-        title = "Atención por WhatsApp",
-        subtitle = "Información de disponibilidad",
-        illustration = IllustrationType.Empty
-    ) {
-        InfoCard(
-            title = "Canal no configurado",
-            text = "Esta versión no tiene un número de atención ni una integración de WhatsApp. " +
-                "No se enviará ningún mensaje desde la aplicación."
-        )
-    }
-}
-
-@Composable
-fun ConfigurationInfoScreen() {
+fun ConfigurationInfoScreen(
+    darkThemeEnabled: Boolean,
+    onDarkThemeChange: (Boolean) -> Unit
+) {
     StudyPage(
         title = "Configuración",
-        subtitle = "Estado de esta versión de MediSynap",
+        subtitle = "Personaliza cómo se ve y se comporta tu espacio de estudio.",
         illustration = IllustrationType.Learning
     ) {
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Text(
+                        text = "Modo oscuro",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    Text(
+                        text = if (darkThemeEnabled) "Activado en este dispositivo" else "Desactivado",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+                Switch(
+                    checked = darkThemeEnabled,
+                    onCheckedChange = onDarkThemeChange
+                )
+            }
+        }
         InfoCard(
             title = "Almacenamiento",
             text = "Las tarjetas y el historial de repaso se guardan localmente en SQLite."
@@ -224,42 +235,9 @@ fun ConfigurationInfoScreen() {
                 "guardan localmente en SQLite."
         )
         InfoCard(
-            title = "Preferencias",
-            text = "Aún no hay preferencias de notificaciones o cuenta conectadas en esta versión."
-        )
-    }
-}
-
-@Composable
-fun ProDemoScreen() {
-    var showBenefits by rememberSaveable { mutableStateOf(false) }
-    StudyPage(
-        title = "MediSynap Pro",
-        subtitle = "Vista demostrativa: no hay compras ni suscripciones activas.",
-        illustration = IllustrationType.Premium
-    ) {
-        InfoCard(
-            title = "Explora la propuesta Pro",
-            text = "Esta pantalla presenta una idea de producto. No representa una oferta " +
-                "disponible ni consulta servicios externos."
-        )
-        Button(
-            onClick = { showBenefits = !showBenefits },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text(if (showBenefits) "Ocultar detalles" else "Ver detalles de demostración")
-        }
-        if (showBenefits) {
-            InfoCard(
-                title = "Beneficios ilustrativos",
-                text = "Organización de mazos, análisis de estudio y opciones de personalización " +
-                    "son ejemplos de funcionalidades posibles; no están habilitadas por una compra."
-            )
-        }
-        Text(
-            text = "Sin facturación, cobros ni integración con Google Play.",
-            color = TextMuted,
-            style = MaterialTheme.typography.bodySmall
+            title = "Sesiones de repaso",
+            text = "Las tarjetas vencidas se muestran primero. Puedes ir adelante y atrás; " +
+                "al calificarlas, su siguiente fecha se calcula con SM-2."
         )
     }
 }
@@ -278,7 +256,31 @@ fun EmptyReviewScreen(onBrowseDecks: () -> Unit) {
 }
 
 @Composable
-private fun StudyPage(
+fun ReviewCompleteScreen(
+    reviewedCount: Int,
+    onBrowseDecks: () -> Unit,
+    onRestart: () -> Unit
+) {
+    StudyPage(
+        title = "¡Sesión completada!",
+        subtitle = "Terminaste las tarjetas de esta sesión.",
+        illustration = IllustrationType.Analytics
+    ) {
+        InfoCard(
+            title = "Buen trabajo",
+            text = "Calificaste $reviewedCount tarjetas. Sus próximos repasos quedaron programados."
+        )
+        Button(onClick = onRestart, modifier = Modifier.fillMaxWidth()) {
+            Text("Empezar otra sesión")
+        }
+        Button(onClick = onBrowseDecks, modifier = Modifier.fillMaxWidth()) {
+            Text("Explorar mazos")
+        }
+    }
+}
+
+@Composable
+fun StudyPage(
     title: String,
     subtitle: String,
     illustration: IllustrationType? = null,
@@ -287,7 +289,7 @@ private fun StudyPage(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(LightColdGrey)
+            .background(MaterialTheme.colorScheme.background)
             .verticalScroll(rememberScrollState())
             .padding(20.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -301,7 +303,7 @@ private fun StudyPage(
                 verticalArrangement = Arrangement.spacedBy(5.dp)
             ) {
                 Text(title, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-                Text(subtitle, style = MaterialTheme.typography.bodyMedium, color = TextMuted)
+                Text(subtitle, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             illustration?.let { type ->
                 MedicalIllustration(type = type, size = 68.dp)
@@ -317,14 +319,14 @@ private fun MetricCard(label: String, value: String, modifier: Modifier = Modifi
     Surface(
         modifier = modifier,
         shape = RoundedCornerShape(16.dp),
-        color = CobaltBlueContainer
+        color = MaterialTheme.colorScheme.primaryContainer
     ) {
         Column(
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
-            Text(value, style = MaterialTheme.typography.headlineSmall, color = CobaltBlue, fontWeight = FontWeight.Bold)
-            Text(label, style = MaterialTheme.typography.bodySmall, color = TextMuted)
+            Text(value, style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+            Text(label, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }
@@ -334,14 +336,14 @@ private fun InfoCard(title: String, text: String) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = CardWhite)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column(
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
-            Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, color = TextDark)
-            Text(text, style = MaterialTheme.typography.bodyMedium, color = TextMuted)
+            Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
+            Text(text, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }

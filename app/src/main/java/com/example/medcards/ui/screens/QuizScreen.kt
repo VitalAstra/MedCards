@@ -32,14 +32,9 @@ import androidx.compose.ui.unit.dp
 import com.example.medcards.data.model.QuizQuestion
 import com.example.medcards.ui.components.IllustrationType
 import com.example.medcards.ui.components.MedicalIllustration
-import com.example.medcards.ui.theme.CardWhite
 import com.example.medcards.ui.theme.CobaltBlue
-import com.example.medcards.ui.theme.CobaltBlueContainer
 import com.example.medcards.ui.theme.ErrorRed
-import com.example.medcards.ui.theme.LightColdGrey
 import com.example.medcards.ui.theme.MintGreen
-import com.example.medcards.ui.theme.TextDark
-import com.example.medcards.ui.theme.TextMuted
 
 @Composable
 fun QuizScreen(
@@ -57,30 +52,30 @@ fun QuizScreen(
 	Column(
 		modifier = Modifier
 			.fillMaxSize()
-			.background(LightColdGrey)
+			.background(MaterialTheme.colorScheme.background)
 			.verticalScroll(rememberScrollState())
 			.padding(20.dp),
 		verticalArrangement = Arrangement.spacedBy(16.dp)
 	) {
-		Text("Test de recuperación activa", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, color = TextDark)
+		Text("Test de recuperación activa", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
 		if (question == null) {
 			MedicalIllustration(IllustrationType.Analytics, size = 92.dp)
 			Text(
 				if (questions.isEmpty()) "No hay preguntas disponibles todavía." else "Sesión completada",
 				style = MaterialTheme.typography.titleLarge,
 				fontWeight = FontWeight.Bold,
-				color = TextDark
+				color = MaterialTheme.colorScheme.onSurface
 			)
 			if (questions.isNotEmpty()) {
-				Text("Resultado: $correctCount de ${questions.size} respuestas correctas.", color = TextMuted)
+				Text("Resultado: $correctCount de ${questions.size} respuestas correctas.", color = MaterialTheme.colorScheme.onSurfaceVariant)
 				LinearProgressIndicator(
 					progress = { correctCount.toFloat() / questions.size },
 					modifier = Modifier.fillMaxWidth(),
 					color = MintGreen,
-					trackColor = CobaltBlueContainer
+					trackColor = MaterialTheme.colorScheme.primaryContainer
 				)
 			} else {
-				Text("Las nuevas preguntas aparecen aquí cuando estén disponibles en el banco de estudio.", color = TextMuted)
+				Text("Las nuevas preguntas aparecen aquí cuando estén disponibles en el banco de estudio.", color = MaterialTheme.colorScheme.onSurfaceVariant)
 			}
 			Button(onClick = onFinish, modifier = Modifier.fillMaxWidth()) {
 				Text("Volver al inicio")
@@ -88,32 +83,32 @@ fun QuizScreen(
 		} else {
 			Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
 				Text("${questionIndex + 1} de ${questions.size}", color = CobaltBlue, fontWeight = FontWeight.Bold)
-				Text(question.subject, color = TextMuted)
+				Text(question.subject, color = MaterialTheme.colorScheme.onSurfaceVariant)
 			}
 			LinearProgressIndicator(
 				progress = { (questionIndex + 1).toFloat() / questions.size },
 				modifier = Modifier.fillMaxWidth(),
 				color = CobaltBlue,
-				trackColor = CobaltBlueContainer
+				trackColor = MaterialTheme.colorScheme.primaryContainer
 			)
 			Card(
 				modifier = Modifier.fillMaxWidth(),
 				shape = RoundedCornerShape(18.dp),
-				colors = CardDefaults.cardColors(containerColor = CardWhite)
+				colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
 			) {
 				Column(
 					modifier = Modifier.padding(20.dp),
 					verticalArrangement = Arrangement.spacedBy(14.dp)
 				) {
 					Text(question.topic.uppercase(), style = MaterialTheme.typography.labelMedium, color = CobaltBlue, fontWeight = FontWeight.Bold)
-					Text(question.question, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold, color = TextDark)
+					Text(question.question, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
 					question.options.forEachIndexed { optionIndex, option ->
 						val isSelected = selectedOptionIndex == optionIndex
 						val isCorrectOption = question.correctOptionIndex == optionIndex
 						val optionColor = when {
 							selectedOptionIndex >= 0 && isCorrectOption -> MintGreen.copy(alpha = 0.15f)
 							isSelected -> ErrorRed.copy(alpha = 0.13f)
-							else -> LightColdGrey
+							else -> MaterialTheme.colorScheme.surfaceVariant
 						}
 						Card(
 							onClick = {
@@ -131,7 +126,7 @@ fun QuizScreen(
 							Text(
 								text = "${'A' + optionIndex}.  $option",
 								modifier = Modifier.padding(horizontal = 14.dp, vertical = 13.dp),
-								color = TextDark,
+								color = MaterialTheme.colorScheme.onSurface,
 								style = MaterialTheme.typography.bodyLarge
 							)
 						}
@@ -144,7 +139,7 @@ fun QuizScreen(
 						) {
 							Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
 								Text(if (wasCorrect) "Correcto" else "Repasa este concepto", fontWeight = FontWeight.Bold, color = if (wasCorrect) MintGreen else ErrorRed)
-								Text(question.explanation, color = TextDark, style = MaterialTheme.typography.bodyMedium)
+								Text(question.explanation, color = MaterialTheme.colorScheme.onSurface, style = MaterialTheme.typography.bodyMedium)
 							}
 						}
 					}

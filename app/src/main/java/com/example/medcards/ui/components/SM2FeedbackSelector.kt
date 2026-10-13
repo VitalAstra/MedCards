@@ -60,7 +60,7 @@ fun SM2FeedbackSelector(
             text = "¿Cómo te resultó?",
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold,
-            color = TextDark
+            color = MaterialTheme.colorScheme.onSurface
         )
         rows.forEach { row ->
             Row(
@@ -74,7 +74,7 @@ fun SM2FeedbackSelector(
                         modifier = Modifier.weight(1f),
                         shape = RoundedCornerShape(14.dp),
                         color = option.color.copy(alpha = 0.13f),
-                        contentColor = TextDark
+                        contentColor = MaterialTheme.colorScheme.onSurface
                     ) {
                         Column(
                             modifier = Modifier.padding(horizontal = 12.dp, vertical = 13.dp)
@@ -90,7 +90,7 @@ fun SM2FeedbackSelector(
                                     interval == 1 -> "En 1 día"
                                     else -> "En $interval días"
                                 },
-                                color = TextMuted,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 fontSize = 12.sp
                             )
                         }
@@ -100,7 +100,7 @@ fun SM2FeedbackSelector(
         }
         Text(
             text = "Los intervalos se calculan con SM-2; «Dominado» programa al menos 7 días.",
-            color = TextMuted,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             style = MaterialTheme.typography.bodySmall
         )
     }

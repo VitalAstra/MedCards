@@ -1,6 +1,7 @@
 package com.example.medcards.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -38,11 +39,7 @@ import com.example.medcards.ui.components.MedicalIllustration
 import com.example.medcards.ui.theme.CardWhite
 import com.example.medcards.ui.theme.CobaltBlue
 import com.example.medcards.ui.theme.CobaltBlueDark
-import com.example.medcards.ui.theme.CobaltBlueContainer
-import com.example.medcards.ui.theme.LightColdGrey
 import com.example.medcards.ui.theme.MintGreen
-import com.example.medcards.ui.theme.TextDark
-import com.example.medcards.ui.theme.TextMuted
 import com.example.medcards.ui.theme.WarningAmber
 
 @Composable
@@ -50,20 +47,76 @@ fun HomeScreen(
     subjectStats: List<SubjectStats>,
     reviewStats: ReviewStats,
     quizStats: QuizStats,
+    displayName: String,
+    preUniversityCardCount: Int,
     onStartReviewClick: () -> Unit,
     onStartQuizClick: () -> Unit,
     onDeckClick: (subject: String) -> Unit,
+    onPreUniversityClick: () -> Unit,
     onMediPassClick: () -> Unit
 ) {
     LazyColumn(
-        modifier = Modifier.fillMaxSize().background(LightColdGrey),
+        modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background),
         verticalArrangement = Arrangement.spacedBy(18.dp)
     ) {
         item {
             HomeHeader(
                 streakDays = reviewStats.streakDays,
+                displayName = displayName,
                 onMediPassClick = onMediPassClick
             )
+        }
+        item {
+            Column(
+                modifier = Modifier.padding(horizontal = 20.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Text(
+                    text = "¿Qué deseas estudiar?",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    text = "Elige un área para empezar a practicar.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+        item {
+            PreUniversityEntryCard(
+                cardCount = preUniversityCardCount,
+                onClick = onPreUniversityClick,
+                modifier = Modifier.padding(horizontal = 20.dp)
+            )
+        }
+        if (subjectStats.isEmpty()) {
+            item {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    MedicalIllustration(IllustrationType.Empty, size = 144.dp)
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        "Aún no hay áreas médicas disponibles.",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        } else {
+            items(subjectStats, key = { it.subject }) { area ->
+                DeckCard(
+                    subject = area.subject,
+                    reviewedCount = area.reviewed,
+                    totalCount = area.total,
+                    onClick = { onDeckClick(area.subject) },
+                    modifier = Modifier.padding(horizontal = 20.dp)
+                )
+            }
         }
         item {
             TodayCard(
@@ -79,39 +132,6 @@ fun HomeScreen(
                 onClick = onStartQuizClick
             )
         }
-        item {
-            Text(
-                text = "Mis mazos",
-                modifier = Modifier.padding(horizontal = 20.dp),
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                color = TextDark
-            )
-        }
-        if (subjectStats.isEmpty()) {
-            item {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 20.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    MedicalIllustration(IllustrationType.Empty, size = 144.dp)
-                    Spacer(Modifier.height(8.dp))
-                    Text("Aún no hay mazos disponibles.", color = TextMuted)
-                }
-            }
-        } else {
-            items(subjectStats, key = { it.subject }) { deck ->
-                DeckCard(
-                    subject = deck.subject,
-                    reviewedCount = deck.reviewed,
-                    totalCount = deck.total,
-                    onClick = { onDeckClick(deck.subject) },
-                    modifier = Modifier.padding(horizontal = 20.dp)
-                )
-            }
-        }
         item { Spacer(Modifier.height(8.dp)) }
     }
 }
@@ -119,6 +139,7 @@ fun HomeScreen(
 @Composable
 private fun HomeHeader(
     streakDays: Int,
+    displayName: String,
     onMediPassClick: () -> Unit
 ) {
     Box(
@@ -144,7 +165,7 @@ private fun HomeHeader(
                     )
                     Spacer(Modifier.height(8.dp))
                     Text(
-                        text = "¡Hola, Marcelo! 👋",
+                        text = "¡Hola, $displayName! 👋",
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold,
                         color = CardWhite
@@ -155,6 +176,7 @@ private fun HomeHeader(
                         color = CardWhite.copy(alpha = 0.9f)
                     )
                 }
+
                 MedicalIllustration(type = IllustrationType.Learning, size = 82.dp)
             }
             Spacer(Modifier.height(14.dp))
@@ -172,7 +194,7 @@ private fun HomeHeader(
                         modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.Bold,
-                        color = TextDark
+                        color = MaterialTheme.colorScheme.onTertiary
                     )
                 }
                 TextButton(onClick = onMediPassClick) {
@@ -188,6 +210,45 @@ private fun HomeHeader(
 }
 
 @Composable
+private fun PreUniversityEntryCard(
+    cardCount: Int,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(18.dp),
+        color = MaterialTheme.colorScheme.primaryContainer
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Text(
+                    "Preuniversitario de medicina",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+                Text(
+                    "$cardCount tarjetas de ciencias básicas",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+            }
+            MedicalIllustration(IllustrationType.PreMedicine, size = 58.dp)
+        }
+    }
+}
+
+@Composable
 private fun TodayCard(
     reviewStats: ReviewStats,
     modifier: Modifier = Modifier,
@@ -196,7 +257,7 @@ private fun TodayCard(
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(18.dp),
-        colors = CardDefaults.cardColors(containerColor = CardWhite),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(Modifier.padding(20.dp)) {
@@ -209,7 +270,7 @@ private fun TodayCard(
                     text = "Meta diaria",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = TextDark
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 MedicalIllustration(IllustrationType.Analytics, size = 52.dp)
             }
@@ -218,18 +279,18 @@ private fun TodayCard(
                 text = "${reviewStats.reviewedToday} repasos hoy · " +
                     "${reviewStats.dueCards} tarjetas pendientes",
                 style = MaterialTheme.typography.bodyMedium,
-                color = TextMuted
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Spacer(Modifier.height(14.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text("Objetivo de hoy", style = MaterialTheme.typography.labelLarge, color = TextDark)
+                Text("Objetivo de hoy", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurface)
                 Text(
                     "${reviewStats.reviewedToday.coerceAtMost(20)}/20",
                     style = MaterialTheme.typography.labelLarge,
-                    color = CobaltBlue,
+                    color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.Bold
                 )
             }
@@ -237,8 +298,8 @@ private fun TodayCard(
             LinearProgressIndicator(
                 progress = { (reviewStats.reviewedToday / 20f).coerceIn(0f, 1f) },
                 modifier = Modifier.fillMaxWidth(),
-                color = CobaltBlue,
-                trackColor = CobaltBlueContainer
+                color = MaterialTheme.colorScheme.primary,
+                trackColor = MaterialTheme.colorScheme.primaryContainer
             )
             Spacer(Modifier.height(16.dp))
             Button(
@@ -266,7 +327,7 @@ private fun QuizLaunchCard(
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(18.dp),
-        colors = CardDefaults.cardColors(containerColor = CardWhite),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(Modifier.padding(18.dp)) {
@@ -274,20 +335,20 @@ private fun QuizLaunchCard(
                 "Tests rápidos",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                color = TextDark
+                color = MaterialTheme.colorScheme.onSurface
             )
             Spacer(Modifier.height(5.dp))
             Text(
                 "${quizStats.dueQuestions} preguntas programadas · ${quizStats.accuracyPercent}% de aciertos",
                 style = MaterialTheme.typography.bodyMedium,
-                color = TextMuted
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Spacer(Modifier.height(12.dp))
             Button(
                 onClick = onClick,
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = CobaltBlue)
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
             ) {
                 Text(
                     if (quizStats.dueQuestions == 0) "Practicar preguntas" else "Iniciar test · ${quizStats.dueQuestions}",

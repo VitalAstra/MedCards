@@ -42,14 +42,10 @@ import com.example.medcards.ui.components.MedicalIllustration
 import com.example.medcards.ui.theme.CardWhite
 import com.example.medcards.ui.theme.CobaltBlue
 import com.example.medcards.ui.theme.CobaltBlueDark
-import com.example.medcards.ui.theme.CobaltBlueContainer
 import com.example.medcards.ui.theme.GoldBadgeEnd
 import com.example.medcards.ui.theme.GoldBadgeStart
 import com.example.medcards.ui.theme.GoldBadgeText
-import com.example.medcards.ui.theme.LightColdGrey
 import com.example.medcards.ui.theme.MintGreen
-import com.example.medcards.ui.theme.TextDark
-import com.example.medcards.ui.theme.TextMuted
 
 @Composable
 fun MediPassProScreen(
@@ -60,7 +56,7 @@ fun MediPassProScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(LightColdGrey)
+            .background(MaterialTheme.colorScheme.background)
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 20.dp, vertical = 18.dp),
         verticalArrangement = Arrangement.spacedBy(18.dp)
@@ -69,7 +65,7 @@ fun MediPassProScreen(
         Text(
             text = "Tu espacio clínico, sin límites",
             style = MaterialTheme.typography.titleLarge,
-            color = TextDark,
+            color = MaterialTheme.colorScheme.onSurface,
             fontWeight = FontWeight.Bold
         )
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -81,7 +77,7 @@ fun MediPassProScreen(
         Text(
             text = "Elige tu plan",
             style = MaterialTheme.typography.titleLarge,
-            color = TextDark,
+            color = MaterialTheme.colorScheme.onSurface,
             fontWeight = FontWeight.Bold
         )
         PlanOption(
@@ -103,7 +99,7 @@ fun MediPassProScreen(
         )
         Surface(
             shape = RoundedCornerShape(16.dp),
-            color = CobaltBlueContainer
+            color = MaterialTheme.colorScheme.primaryContainer
         ) {
             Text(
                 text = if (isPremiumActive) {
@@ -114,14 +110,14 @@ fun MediPassProScreen(
                 },
                 modifier = Modifier.padding(16.dp),
                 style = MaterialTheme.typography.bodyMedium,
-                color = CobaltBlue
+                color = MaterialTheme.colorScheme.onPrimaryContainer
             )
         }
         Text(
             text = "Precios ilustrativos en USD. Modo demostración local: no se realizan " +
                 "cobros ni compras. Google Play Billing aún no está conectado.",
             style = MaterialTheme.typography.bodySmall,
-            color = TextMuted,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center
         )
         Spacer(Modifier.height(12.dp))
@@ -198,18 +194,18 @@ private fun BenefitRow(
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Surface(shape = RoundedCornerShape(12.dp), color = CobaltBlueContainer) {
+        Surface(shape = RoundedCornerShape(12.dp), color = MaterialTheme.colorScheme.primaryContainer) {
             Icon(
                 imageVector = icon,
                 contentDescription = null,
                 modifier = Modifier.padding(10.dp),
-                tint = CobaltBlue
+                tint = MaterialTheme.colorScheme.primary
             )
         }
         Text(
             text = text,
             style = MaterialTheme.typography.bodyLarge,
-            color = TextDark,
+            color = MaterialTheme.colorScheme.onSurface,
             fontWeight = FontWeight.Medium
         )
     }
@@ -230,13 +226,20 @@ private fun PlanOption(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
-            containerColor = if (selected) CobaltBlueContainer else CardWhite
+            containerColor = if (selected) {
+                MaterialTheme.colorScheme.primaryContainer
+            } else {
+                MaterialTheme.colorScheme.surface
+            }
         ),
         border = CardDefaults.outlinedCardBorder().copy(
             width = if (selected) 2.dp else 1.dp,
             brush = Brush.linearGradient(
                 if (selected) listOf(CobaltBlue, MintGreen)
-                else listOf(LightColdGrey, LightColdGrey)
+                else listOf(
+                    MaterialTheme.colorScheme.surfaceVariant,
+                    MaterialTheme.colorScheme.surfaceVariant
+                )
             )
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = if (selected) 3.dp else 1.dp)
@@ -251,13 +254,13 @@ private fun PlanOption(
             Icon(
                 imageVector = if (selected) Icons.Default.CheckCircle else Icons.Default.AutoAwesome,
                 contentDescription = null,
-                tint = if (selected) CobaltBlue else TextMuted
+                tint = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
             )
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     title,
                     style = MaterialTheme.typography.titleMedium,
-                    color = TextDark,
+                    color = MaterialTheme.colorScheme.onSurface,
                     fontWeight = FontWeight.Bold
                 )
                 badge?.let {
@@ -272,11 +275,11 @@ private fun PlanOption(
                     }
                 }
                 Spacer(Modifier.height(3.dp))
-                Text(detail, style = MaterialTheme.typography.bodySmall, color = TextMuted)
+                Text(detail, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             Column(horizontalAlignment = Alignment.End) {
-                Text(price, style = MaterialTheme.typography.titleMedium, color = CobaltBlue, fontWeight = FontWeight.Bold)
-                Text(cadence, style = MaterialTheme.typography.labelSmall, color = TextMuted)
+                Text(price, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                Text(cadence, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
     }

@@ -47,13 +47,14 @@ fun MedicalIllustration(
     modifier: Modifier = Modifier,
     size: Dp = 72.dp
 ) {
+    val illustrationBackground = androidx.compose.material3.MaterialTheme.colorScheme.primaryContainer
     Canvas(modifier = modifier.size(size)) {
         val scaleFactor = minOf(this.size.width, this.size.height) / 100f
         val offsetX = (this.size.width - 100f * scaleFactor) / 2f
         val offsetY = (this.size.height - 100f * scaleFactor) / 2f
         translate(left = offsetX, top = offsetY) {
             scale(scaleFactor, scaleFactor, pivot = Offset.Zero) {
-                drawCircle(CobaltBlueContainer, radius = 46f, center = Offset(50f, 50f))
+                drawCircle(illustrationBackground, radius = 46f, center = Offset(50f, 50f))
                 when (type) {
                     IllustrationType.Learning -> drawLearningIllustration()
                     IllustrationType.Anatomy -> drawAnatomyIllustration()
