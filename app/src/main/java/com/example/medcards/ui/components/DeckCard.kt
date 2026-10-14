@@ -25,6 +25,7 @@ fun DeckCard(
     subject: String,
     reviewedCount: Int,
     totalCount: Int,
+    dueCount: Int? = null,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -56,7 +57,9 @@ fun DeckCard(
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "$reviewedCount de $totalCount tarjetas repasadas",
+                    text = dueCount?.let {
+                        "$totalCount tarjetas · $it pendientes · $reviewedCount estudiadas"
+                    } ?: "$reviewedCount de $totalCount tarjetas repasadas",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

@@ -15,11 +15,22 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.Icon
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -43,7 +54,7 @@ fun MetricsScreen(
 ) {
     StudyPage(
         title = "Métricas",
-        subtitle = "Actividad calculada a partir de tus datos locales.",
+        subtitle = "Consulta tu actividad y progreso de estudio.",
         illustration = IllustrationType.Analytics
     ) {
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -80,31 +91,91 @@ fun MetricsScreen(
 @Composable
 fun DeckCatalogScreen(
     subjectStats: List<SubjectStats>,
+    dueCardsBySubject: Map<String, Int>,
     onDeckClick: (String) -> Unit
 ) {
+    var searchQuery by rememberSaveable { mutableStateOf("") }
+    var selectedFilter by rememberSaveable { mutableStateOf(DeckFilter.ALL) }
+    val totalCards = subjectStats.sumOf { it.total }
+    val totalDueCards = subjectStats.sumOf { dueCardsBySubject[it.subject] ?: 0 }
+    val matchingDecks = subjectStats.filter { deck ->
+        val matchesSearch = deck.subject.contains(searchQuery.trim(), ignoreCase = true)
+        val dueCount = dueCardsBySubject[deck.subject] ?: 0
+        val matchesFilter = when (selectedFilter) {
+            DeckFilter.ALL -> true
+            DeckFilter.DUE -> dueCount > 0
+            DeckFilter.STUDIED -> deck.reviewed > 0
+        }
+        matchesSearch && matchesFilter
+    }
+
     StudyPage(
-        title = "Mis mazos",
-        subtitle = "Selecciona un mazo para comenzar una sesión de repaso.",
+        title = "Biblioteca",
+        subtitle = "Explora tus áreas, revisa tu progreso y empieza a estudiar.",
         illustration = IllustrationType.Learning
     ) {
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            MetricCard("Áreas", subjectStats.size.toString(), Modifier.weight(1f))
+            MetricCard("Tarjetas", totalCards.toString(), Modifier.weight(1f))
+            MetricCard("Pendientes", totalDueCards.toString(), Modifier.weight(1f))
+        }
+        OutlinedTextField(
+            value = searchQuery,
+            onValueChange = { searchQuery = it },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
+            label = { Text("Buscar un área") },
+            leadingIcon = {
+                Icon(Icons.Default.Search, contentDescription = null)
+            },
+            colors = TextFieldDefaults.colors(
+                focusedContainerColor = MaterialTheme.colorScheme.surface,
+                unfocusedContainerColor = MaterialTheme.colorScheme.surface
+            )
+        )
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            DeckFilter.entries.forEach { filter ->
+                FilterChip(
+                    selected = selectedFilter == filter,
+                    onClick = { selectedFilter = filter },
+                    label = { Text(filter.label) }
+                )
+            }
+        }
         if (subjectStats.isEmpty()) {
             MedicalIllustration(
                 IllustrationType.Empty,
                 modifier = Modifier.fillMaxWidth(),
                 size = 160.dp
             )
-            InfoCard("Sin mazos", "Todavía no hay mazos guardados en este dispositivo.")
+            InfoCard("Biblioteca vacía", "Aún no hay áreas de estudio disponibles.")
+        } else if (matchingDecks.isEmpty()) {
+            InfoCard(
+                "Sin resultados",
+                if (searchQuery.isNotBlank()) {
+                    "No encontramos áreas que coincidan con “${searchQuery.trim()}”."
+                } else {
+                    "No hay áreas que coincidan con este filtro."
+                }
+            )
         } else {
-            subjectStats.forEach { deck ->
+            matchingDecks.forEach { deck ->
                 DeckCard(
                     subject = deck.subject,
                     reviewedCount = deck.reviewed,
                     totalCount = deck.total,
+                    dueCount = dueCardsBySubject[deck.subject] ?: 0,
                     onClick = { onDeckClick(deck.subject) }
                 )
             }
         }
     }
+}
+
+private enum class DeckFilter(val label: String) {
+    ALL("Todas"),
+    DUE("Pendientes"),
+    STUDIED("Estudiadas")
 }
 
 @Composable
@@ -154,7 +225,7 @@ fun MemoryStatisticsScreen(
 fun CalendarInfoScreen(reviewStats: ReviewStats, cards: List<Flashcard>) {
     StudyPage(
         title = "Calendario de repasos",
-        subtitle = "Una vista de orientación para planificar tu estudio.",
+        subtitle = "Consulta tus repasos próximos y tu actividad reciente.",
         illustration = IllustrationType.Calendar
     ) {
         InfoCard(
@@ -213,7 +284,7 @@ fun ConfigurationInfoScreen(
                         fontWeight = FontWeight.SemiBold
                     )
                     Text(
-                        text = if (darkThemeEnabled) "Activado en este dispositivo" else "Desactivado",
+                        text = if (darkThemeEnabled) "Activado" else "Desactivado",
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         style = MaterialTheme.typography.bodyMedium
                     )
@@ -225,14 +296,9 @@ fun ConfigurationInfoScreen(
             }
         }
         InfoCard(
-            title = "Almacenamiento",
-            text = "Las tarjetas y el historial de repaso se guardan localmente en SQLite."
-        )
-        InfoCard(
             title = "Repetición espaciada",
             text = "SM-2 programa tarjetas y preguntas: los errores vuelven en 10 minutos y " +
-                "los aciertos amplían progresivamente el intervalo. Fechas e historial se " +
-                "guardan localmente en SQLite."
+                "los aciertos amplían progresivamente el intervalo."
         )
         InfoCard(
             title = "Sesiones de repaso",

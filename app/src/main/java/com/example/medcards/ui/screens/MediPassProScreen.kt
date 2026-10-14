@@ -34,7 +34,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.medcards.data.model.MediPassPlan
 import com.example.medcards.ui.components.IllustrationType
@@ -72,26 +71,22 @@ fun MediPassProScreen(
             BenefitRow(Icons.Default.LocalLibrary, "Mazos y repasos ilimitados")
             BenefitRow(Icons.Default.Insights, "Métricas de aprendizaje detalladas")
             BenefitRow(Icons.Default.NotificationsActive, "Planifica tus sesiones de estudio")
-            BenefitRow(Icons.Default.CloudDone, "Experiencia premium en tu dispositivo")
+            BenefitRow(Icons.Default.CloudDone, "Acceso a funciones exclusivas")
         }
         Text(
-            text = "Elige tu plan",
+            text = "Tu plan",
             style = MaterialTheme.typography.titleLarge,
             color = MaterialTheme.colorScheme.onSurface,
             fontWeight = FontWeight.Bold
         )
         PlanOption(
             title = "Mensual",
-            price = "US$4.99",
-            cadence = "por mes",
             detail = "Flexibilidad mes a mes",
             selected = activePlan == MediPassPlan.MONTHLY,
             onClick = { onSelectPlan(MediPassPlan.MONTHLY) }
         )
         PlanOption(
             title = "Semestral",
-            price = "US$24.99",
-            cadence = "cada 6 meses",
             detail = "Ahorra frente al pago mensual",
             badge = "MEJOR VALOR",
             selected = activePlan == MediPassPlan.SEMIANNUAL,
@@ -102,24 +97,13 @@ fun MediPassProScreen(
             color = MaterialTheme.colorScheme.primaryContainer
         ) {
             Text(
-                text = if (isPremiumActive) {
-                    "MediPass Pro está activo en este dispositivo. Puedes cambiar el plan " +
-                        "de demostración arriba."
-                } else {
-                    "Selecciona un plan para activar la experiencia de demostración."
-                },
+                text = if (isPremiumActive) "MediPass Pro está activo." else
+                    "Plan seleccionado: ${if (activePlan == MediPassPlan.MONTHLY) "Mensual" else "Semestral"}.",
                 modifier = Modifier.padding(16.dp),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onPrimaryContainer
             )
         }
-        Text(
-            text = "Precios ilustrativos en USD. Modo demostración local: no se realizan " +
-                "cobros ni compras. Google Play Billing aún no está conectado.",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center
-        )
         Spacer(Modifier.height(12.dp))
     }
 }
@@ -214,8 +198,6 @@ private fun BenefitRow(
 @Composable
 private fun PlanOption(
     title: String,
-    price: String,
-    cadence: String,
     detail: String,
     selected: Boolean,
     onClick: () -> Unit,
@@ -276,10 +258,6 @@ private fun PlanOption(
                 }
                 Spacer(Modifier.height(3.dp))
                 Text(detail, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-            Column(horizontalAlignment = Alignment.End) {
-                Text(price, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
-                Text(cadence, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
     }

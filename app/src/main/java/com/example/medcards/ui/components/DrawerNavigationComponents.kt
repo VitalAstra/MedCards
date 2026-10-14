@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalDrawerSheet
@@ -36,21 +35,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.medcards.navigation.Screen
 import com.example.medcards.R
-import com.example.medcards.ui.theme.CardWhite
 import com.example.medcards.ui.theme.CobaltBlue
-import com.example.medcards.ui.theme.CobaltBlueContainer
 import com.example.medcards.ui.theme.CobaltBlueDark
-import com.example.medcards.ui.theme.GoldBadgeEnd
-import com.example.medcards.ui.theme.GoldBadgeStart
-import com.example.medcards.ui.theme.GoldBadgeText
-import com.example.medcards.ui.theme.MintGreen
-import com.example.medcards.ui.theme.TextDark
-import com.example.medcards.ui.theme.TextMuted
 
 @Composable
 fun MedCardsDrawerSheet(
     currentRoute: String,
-    deckCount: Int,
     profileName: String,
     profilePhotoPath: String?,
     onProfileClick: () -> Unit,
@@ -103,18 +93,6 @@ fun MedCardsDrawerSheet(
                             fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
                             fontSize = 14.sp
                         )
-                        if (screen == Screen.Mazos) {
-                            Text(
-                                text = deckCount.toString(),
-                                color = CobaltBlue,
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier
-                                    .clip(CircleShape)
-                                    .background(CobaltBlue.copy(alpha = 0.12f))
-                                    .padding(horizontal = 8.dp, vertical = 3.dp)
-                            )
-                        }
                     }
                 },
                 selected = selected,
@@ -137,21 +115,6 @@ fun MedCardsDrawerSheet(
         }
 
         Spacer(Modifier.weight(1f))
-        HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(7.dp)
-        ) {
-            Box(Modifier.size(8.dp).clip(CircleShape).background(MintGreen))
-            Text(
-                text = "Datos locales en este dispositivo",
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                fontSize = 12.sp
-            )
-        }
     }
 }
 
@@ -192,17 +155,6 @@ fun MedCardsDrawerHeader() {
                     "Tu espacio de estudio",
                     color = Color.White.copy(alpha = 0.86f),
                     fontSize = 12.sp
-                )
-                Spacer(Modifier.height(7.dp))
-                Text(
-                    "MediSynap Pro · vista demo",
-                    color = GoldBadgeText,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 11.sp,
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(50))
-                        .background(Brush.horizontalGradient(listOf(GoldBadgeStart, GoldBadgeEnd)))
-                        .padding(horizontal = 8.dp, vertical = 3.dp)
                 )
             }
         }

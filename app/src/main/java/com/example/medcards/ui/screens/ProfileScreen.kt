@@ -40,7 +40,7 @@ fun ProfileScreen(
     var editedName by rememberSaveable(displayName) { mutableStateOf(displayName) }
     StudyPage(
         title = "Mi perfil",
-        subtitle = "Tu actividad de estudio y los datos de tu perfil en este dispositivo.",
+        subtitle = "Tu actividad de estudio y tus preferencias de perfil.",
         illustration = IllustrationType.Learning
     ) {
         Card(
@@ -58,7 +58,7 @@ fun ProfileScreen(
                 ProfileAvatar(displayName = displayName, photoPath = photoPath, size = 76.dp)
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(displayName, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                    Text("Perfil local", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text("Estudiante", color = MaterialTheme.colorScheme.onSurfaceVariant)
                     OutlinedButton(onClick = onPickPhoto) {
                         Text("Cambiar foto")
                     }

@@ -176,7 +176,6 @@ fun MainMedCardsApp(
         drawerContent = {
             MedCardsDrawerSheet(
                 currentRoute = currentRoute,
-                deckCount = medicalSubjectStats.size,
                 profileName = profileName,
                 profilePhotoPath = profilePhotoPath,
                 onProfileClick = {
@@ -376,8 +375,14 @@ fun MainMedCardsApp(
                     )
                 }
                 composable(Screen.Mazos.route) {
+                    val dueCardsBySubject = remember(repository, refreshKey) {
+                        medicalSubjectStats.associate { stats ->
+                            stats.subject to repository.getDueFlashcards(stats.subject).size
+                        }
+                    }
                     DeckCatalogScreen(
                         subjectStats = medicalSubjectStats,
+                        dueCardsBySubject = dueCardsBySubject,
                         onDeckClick = { subject -> startReview(subject) }
                     )
                 }

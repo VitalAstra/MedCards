@@ -5,9 +5,9 @@ import androidx.compose.material.icons.filled.Analytics
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.automirrored.filled.Assignment
 import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Layers
+import androidx.compose.material.icons.filled.LocalLibrary
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Timeline
 import androidx.compose.material.icons.filled.WorkspacePremium
@@ -24,7 +24,7 @@ sealed class Screen(
     data object Pruebas : Screen("pruebas", "Tests rápidos", Icons.AutoMirrored.Filled.Assignment)
     data object Metricas : Screen("metricas", "Métricas", Icons.Default.Timeline)
     data object Pro : Screen("pro", "MediPass Pro", Icons.Default.WorkspacePremium)
-    data object Mazos : Screen("mazos", "Mis mazos de estudio", Icons.Default.Folder)
+    data object Mazos : Screen("mazos", "Biblioteca", Icons.Default.LocalLibrary)
     data object Preuniversitario : Screen("preuniversitario", "Preuniversitario", Icons.Default.School)
     data object Calendario : Screen("calendario", "Calendario de repasos", Icons.Default.DateRange)
     data object Estadisticas : Screen("estadisticas", "Estadísticas de memoria", Icons.Default.Analytics)
@@ -34,9 +34,9 @@ sealed class Screen(
 
     companion object {
         val bottomNavigation: List<Screen>
-            get() = listOf(Inicio, Repaso, Metricas, Pro)
+            get() = listOf(Inicio, Repaso, Mazos, Metricas)
 
         val drawerNavigation: List<Screen>
-            get() = listOf(Pruebas, Mazos, Preuniversitario, Calendario, Estadisticas, Configuracion)
+            get() = listOf(Pruebas, Pro, Preuniversitario, Calendario, Estadisticas, Configuracion)
     }
 }
